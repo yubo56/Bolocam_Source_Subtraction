@@ -15,7 +15,7 @@ num_bands = n_elements(whites)
 ; generate specdens
 specdens = []
 for i=0, (num_bands - 1) do begin
-    specdens = [[[specdens]], [[spdensgen(range, whites[i], elbows[i], pows[i], binwidth)]]]
+    specdens = [[[specdens]], [[spdensgen(range, whites[i]^2, elbows[i], pows[i], binwidth)]]]
 endfor
 
 return, specdens
