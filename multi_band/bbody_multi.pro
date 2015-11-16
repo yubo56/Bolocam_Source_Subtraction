@@ -23,6 +23,7 @@ if n_elements(params) eq 2 then begin ; if params is not effed up
         tdust:params[1],$
         num_iters:num_iters,$
         sigm_beta:ret.sigm_beta,$
+        sigm_tdust:ret.sigm_tdust,
         dbeta:ret.dbeta,$
         dt_dust:ret.dt_dust}
 endif else return, {tdust:-1}
