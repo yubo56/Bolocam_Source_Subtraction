@@ -50,18 +50,13 @@ endif else begin
 endelse
 if ~ keyword_set(eq_sigm) then sigms = sigm_multi(sigm, freqs) else sigms = sigm_multi(sigm, freqs, eq_sigm=eq_sigm)
 
-if keyword_set(real_pos) then begin
-    xparam = real_pos[0]
-    yparam = real_pos[1]
-endif
+xparam = real_pos[0]
+yparam = real_pos[1]
 
 aest = real_amp
 
-; residual/chi2/derivative dbeta
-dbeta = 0 ; derivative dbeta
-dt_dust = 0 ; derivative dt_dust
+; chi^2
 chi2 = 0
-inv_sigm_T = 0
 for i=0, num_bands - 1 do begin
     ; compute residual
     signal[*,*,i] = signal[*,*,i] - addgauss(amps[i] * aest, sigms[i], xparam, yparam, dblarr(range, range))
