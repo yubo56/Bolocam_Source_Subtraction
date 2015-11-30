@@ -204,7 +204,7 @@ return, {xparam:xparam,$
     chi2:chi2,$
     sigm_beta:sqrt(1/inv_sigm_beta) / aest,$
     sigm_tdust:sqrt(1/inv_sigm_T) / aest,$
-    covar_betaamp:sqrt(1/inv_sigm_beta) / sqrt(2 * aest),$
+    covar_betaamp:sqrt(1/inv_sigm_beta) / sqrt(aest),$
     emissivity:emissivity,$
     tdust:tdust,$
     dbeta:real_part(dbeta),$
