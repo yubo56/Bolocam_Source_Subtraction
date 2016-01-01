@@ -139,7 +139,6 @@ Aesttop = 0
 Aestbottom = 0
 inv_sigm_a = 0
 inv_sigm_beta = 0
-inv_covar_betaamp = 0 ; we will compute with sigm_beta and take care of factor of 2A at end
 
 ; aest/sigm_a/sigm_beta
 kfilters = []
@@ -159,7 +158,6 @@ for i=0, num_bands - 1 do begin
 
     ; compute uncertaintes for both black body and power law case
     inv_sigm_beta += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i])) * alog(freqs[i] / freqs[0])^2
-    inv_covar_betaamp += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i])) * alog(freqs[i] / freqs[0])
 ENDFOR
 
 ; if amplitude estimator is set, use it, else use computed one
@@ -204,7 +202,7 @@ return, {xparam:xparam,$
     chi2:chi2,$
     sigm_beta:sqrt(1/inv_sigm_beta) / aest,$
     sigm_tdust:sqrt(1/inv_sigm_T) / aest,$
-    covar_betaamp:sqrt(1/inv_sigm_beta) / sqrt(aest),$
+    covar_betaamp:1/inv_sigm_beta /(2 * aest),$
     emissivity:emissivity,$
     tdust:tdust,$
     dbeta:real_part(dbeta),$

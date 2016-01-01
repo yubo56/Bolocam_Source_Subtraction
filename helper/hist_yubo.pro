@@ -3,6 +3,12 @@ compile_opt idl2, HIDDEN
 ; saves some time, just inputs some reasonable params for hist_wrapper
 ; uses bins of width  [[ stddev(list) / n_elements(list)^(1/3) ]]
 list = lst
+
+if stddev(list) eq 0 then begin
+    print, "ERROR: stddev = 0"
+    return, -1
+endif
+
 if keyword_set(sigm) then begin
     list = list[where(list lt mean(list) + 5 * sigm)]
     list = list[where(list gt mean(list) - 5 * sigm)]
