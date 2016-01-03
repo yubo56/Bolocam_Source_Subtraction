@@ -139,6 +139,7 @@ Aesttop = 0
 Aestbottom = 0
 inv_sigm_a = 0
 inv_sigm_beta = 0
+inv_covar = 0
 
 ; aest/sigm_a/sigm_beta
 kfilters = []
@@ -158,6 +159,7 @@ for i=0, num_bands - 1 do begin
 
     ; compute uncertaintes for both black body and power law case
     inv_sigm_beta += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i])) * alog(freqs[i] / freqs[0])^2
+    inv_covar += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i])) * alog(freqs[i] / freqs[0])
 ENDFOR
 
 ; if amplitude estimator is set, use it, else use computed one
@@ -193,16 +195,20 @@ for i=0, num_bands - 1 do begin
     dbeta += (range )^2 * TOTAL((-conj(fft_shift(fft(signal[*,*,i]))) * aest * kfilters[*,*,i]) / specdens[*,*,i] * mask) * 2 * alog(freqs[i] / freqs[0])
 endfor
 
+; to actually get covariances, must invert non-diagonal subspace of covariance matrix
+covar = [[ inv_sigm_a, aest * inv_covar], [aest * inv_covar, aest^2 * inv_sigm_beta]]
+covar = invert(covar)
+
 return, {xparam:xparam,$
     yparam:yparam,$
     Aest: Aest,$
     sig: {signal:signal, freqs:freqs},$
     sigm_x0:sqrt(1/TOTAL(weights)) / (aest * binwidth),$
-    sigm_a: sqrt(1/inv_sigm_a),$
+    sigm_a: sqrt(covar[0,0]),$
     chi2:chi2,$
-    sigm_beta:sqrt(1/inv_sigm_beta) / aest,$
+    sigm_beta:sqrt(covar[1,1]),$
     sigm_tdust:sqrt(1/inv_sigm_T) / aest,$
-    covar_betaamp:1/inv_sigm_beta /(2 * aest),$
+    covar_betaamp:mean([covar[0,1], covar[1,0]]),$
     emissivity:emissivity,$
     tdust:tdust,$
     dbeta:real_part(dbeta),$
