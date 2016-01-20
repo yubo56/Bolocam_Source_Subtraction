@@ -18,7 +18,7 @@ function contour_wrap, data, ps_file=ps_file, x_bin=x, y_bin=y, title=title, xti
 size_dat = size(data)
 if size_dat[0] ne 2 then begin
     print, "Error: Wrong dimensionality of Data; should be 2D"
-    return
+    return, -1
 endif
 ; if no step or coordinates are provided, auto-generate [-n/2 - 1, ... n/2] for domain
 if ~keyword_set(x) and ~keyword_set(xstep) then x = indgen(size_dat[1]) - size_dat[1] / 2
@@ -76,6 +76,6 @@ endif else begin
     endelse
 endelse
 
-return, levels
+if levels ne !NULL then return, levels else return, -1
 
 end
