@@ -6,25 +6,26 @@ compile_opt idl2, HIDDEN
 ;   functargs = {sig:sig, specdens:specdens, sigm:sigm, binwidth:binwidth}
 ;   /bbody = keyword_set(bbody) means we are doing double fit for tdust, emissivity
 
+print, p
 if keyword_set(bbody) then begin
     if keyword_set(real_x) then begin
         if keyword_set(real_y) then begin
             if keyword_set(real_amp) then begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p[0], tdust=p[1], /bbody, real_x=real_x, real_y=real_y, real_amp=real_amp)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_x=real_x, real_y=real_y, real_amp=real_amp)
                 dp = [ret.dbeta, ret.dt_dust]
                 return, ret.chi2
             endif else begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p[0], tdust=p[1], /bbody, real_x=real_x, real_y=real_y)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_x=real_x, real_y=real_y)
                 dp = [ret.dbeta, ret.dt_dust]
                 return, ret.chi2
             endelse
         endif else begin
             if keyword_set(real_amp) then begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p[0], tdust=p[1], /bbody, real_x=real_x, real_amp=real_amp)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_x=real_x, real_amp=real_amp)
                 dp = [ret.dbeta, ret.dt_dust]
                 return, ret.chi2
             endif else begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p[0], tdust=p[1], /bbody, real_x=real_x)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_x=real_x)
                 dp = [ret.dbeta, ret.dt_dust]
                 return, ret.chi2
             endelse
@@ -32,21 +33,21 @@ if keyword_set(bbody) then begin
     endif else begin
         if keyword_set(real_y) then begin
             if keyword_set(real_amp) then begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p[0], tdust=p[1], /bbody, real_amp=real_amp, real_y=real_y)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_amp=real_amp, real_y=real_y)
                 dp = [ret.dbeta, ret.dt_dust]
                 return, ret.chi2
             endif else begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p[0], tdust=p[1], /bbody, real_y=real_y)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_y=real_y)
                 dp = [ret.dbeta, ret.dt_dust]
                 return, ret.chi2
             endelse
         endif else begin
             if keyword_set(real_amp) then begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p[0], tdust=p[1], /bbody, real_amp=real_amp)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_amp=real_amp)
                 dp = [ret.dbeta, ret.dt_dust]
                 return, ret.chi2
             endif else begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p[0], tdust=p[1], /bbody)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody)
                 dp = [ret.dbeta, ret.dt_dust]
                 return, ret.chi2
             endelse
@@ -56,21 +57,21 @@ endif else begin
     if keyword_set(real_x) then begin
         if keyword_set(real_y) then begin
             if keyword_set(real_amp) then begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p, real_x=real_x, real_y=real_y, real_amp=real_amp)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_x=real_x, real_y=real_y, real_amp=real_amp)
                 dp = ret.dbeta
                 return, ret.chi2
             endif else begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p, real_x=real_x, real_y=real_y)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_x=real_x, real_y=real_y)
                 dp = ret.dbeta
                 return, ret.chi2
             endelse
         endif else begin
             if keyword_set(real_amp) then begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p, real_x=real_x, real_amp=real_amp)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_x=real_x, real_amp=real_amp)
                 dp = ret.dbeta
                 return, ret.chi2
             endif else begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p, real_x=real_x)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_x=real_x)
                 dp = ret.dbeta
                 return, ret.chi2
             endelse
@@ -78,21 +79,21 @@ endif else begin
     endif else begin
         if keyword_set(real_y) then begin
             if keyword_set(real_amp) then begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p, real_amp=real_amp, real_y=real_y)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_amp=real_amp, real_y=real_y)
                 dp = ret.dbeta
                 return, ret.chi2
             endif else begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p, real_y=real_y)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_y=real_y)
                 dp = ret.dbeta
                 return, ret.chi2
             endelse
         endif else begin
             if keyword_set(real_amp) then begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p, real_amp=real_amp)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_amp=real_amp)
                 dp = ret.dbeta
                 return, ret.chi2
             endif else begin
-                ret = subtractmax_multi(sig, specdens, sigm, binwidth, emissivity=p)
+                ret = subtractmax_multi(sig, specdens, sigm, binwidth, p)
                 dp = ret.dbeta
                 return, ret.chi2
             endelse

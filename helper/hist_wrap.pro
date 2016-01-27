@@ -1,5 +1,5 @@
 pro hist_wrap, data, ps_file=ps_file,  title=title, xtitle=xtitle, ytitle=ytitle, xstep=xstep, ystep=ystep, theory=theory, nofit=nofit
-; wrapper around contour to write to filename
+; wrapper around histogram to write to filename
 ;   data: data to plot
 ;   ps_file: filename to write to
 ;   x_bin: x-axis bins

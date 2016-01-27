@@ -1,4 +1,4 @@
-function amps_multi, in_a, in_freqs, bbody=bbody, emissivity = emissivity, tdust = tdust
+function amps_multi, in_a, in_freqs, emissivity, tdust, bbody=bbody
 compile_opt idl2, HIDDEN
 ; Input
 ;   in_a - amplitude in first band
@@ -12,8 +12,8 @@ compile_opt idl2, HIDDEN
 ;
 ; given leading amplitude and frequencies, return full set of ones
 
-if ~ keyword_set(emissivity) then emissivity = 1.5 ; default emissivity
-if ~ keyword_set(tdust) then tdust = 40 ; default tdust
+if emissivity eq !NULL then emissivity = 1.5 ; default emissivity
+if tdust eq !NULL then tdust = 40 ; default tdust
 freqs = double(in_freqs)
 num_bands = n_elements(freqs)
 amps = dblarr(num_bands)

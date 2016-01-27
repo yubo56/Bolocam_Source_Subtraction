@@ -1,4 +1,4 @@
-function bbody_multi, sig, specdens0, sigm, binwidth, tdust = tdust, emissivity=emissivity
+function bbody_multi, sig, specdens0, sigm, binwidth, tdust, emissivity
 compile_opt idl2, HIDDEN
 ; usual inputs
 ; computes emissivity + tdust by calling tnmin
@@ -11,7 +11,7 @@ limits_tdust = [5, 100 ] ; limits on tdust
 num_iters = 0
 params = tnmin('tnmin_wrap', [emissivity, tdust], functargs={signal:sig, specdens:specdens0, sigm:sigm, binwidth:binwidth, bbody:1}, autoderivative=0, parinfo=[{limited:[1,1], limits:limits_em}, {limited:[1,1], limits:limits_tdust}], niter=num_iters, /quiet)
 if n_elements(params) eq 2 then begin ; if params is not effed up
-    ret = subtractmax_multi(sig, specdens0, sigm, binwidth, emissivity = params[0], tdust=params[1], /bbody)
+    ret = subtractmax_multi(sig, specdens0, sigm, binwidth, params[0], params[1], /bbody)
     return, {xparam:ret.xparam,$
         yparam:ret.yparam,$
         Aest:ret.Aest,$

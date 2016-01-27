@@ -1,4 +1,4 @@
-function addfunc_multi, in_sig, in_a, in_sigm, num_beams, MINSEP=minsep, emissivity=emissivity, tdust=tdust
+function addfunc_multi, in_sig, in_a, in_sigm, num_beams, emissivity, tdust, MINSEP=minsep
 compile_opt idl2, HIDDEN
     ; Input
     ;   in_sig       - Existing map (usual struct with signal, freqs)
@@ -35,9 +35,9 @@ for i=2, num_beams do begin
     x0 = [x0,x]
     y0 = [y0,y]
     if keyword_set(tdust) then begin
-        if keyword_set(emissivity) then signal = addgauss_multi(in_a, in_sigm, x, y, signal, emissivity=emissivity, tdust=tdust) else signal = addgauss_multi(in_a, in_sigm, x, y, signal, tdust=tdust)
+        if keyword_set(emissivity) then signal = addgauss_multi(in_a, in_sigm, x, y, signal, emissivity, tdust) else signal = addgauss_multi(in_a, in_sigm, x, y, signal, tdust)
     endif else begin
-        if keyword_set(emissivity) then signal = addgauss_multi(in_a, in_sigm, x, y, signal, emissivity=emissivity) else signal = addgauss_multi(in_a, in_sigm, x, y, signal)
+        if keyword_set(emissivity) then signal = addgauss_multi(in_a, in_sigm, x, y, signal, emissivity) else signal = addgauss_multi(in_a, in_sigm, x, y, signal)
     endelse
 endfor
 

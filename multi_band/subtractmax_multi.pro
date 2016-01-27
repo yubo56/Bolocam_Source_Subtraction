@@ -1,4 +1,4 @@
-function subtractmax_multi, sig, specDens, sigm, binwidth, bbody=bbody, eq_sigm=eq_sigm, emissivity=emissivity, tdust=tdust, real_x=real_x, real_y=real_y, real_amp=real_amp
+function subtractmax_multi, sig, specDens, sigm, binwidth, emissivity, tdust, bbody=bbody, eq_sigm=eq_sigm, real_x=real_x, real_y=real_y, real_amp=real_amp
 compile_opt idl2, HIDDEN
     ; Input
     ;   sig         - struct containing
@@ -32,19 +32,19 @@ fitRange = 3        ; fit an area of +- fitRange around max to find peak
 range = double(sqrt(n_elements(signal[*,*,0])))
 num_bands = n_elements(freqs)
 ; set up default values
-if ~ keyword_set(emissivity) then emissivity = 1.5D else emissivity = double(emissivity)
-if ~ keyword_set(tdust) then tdust = 40D else tdust = double(tdust)
+if emissivity eq !NULL then emissivity = 1.5D else emissivity = double(emissivity)
+if tdust eq !NULL then tdust = 40D else tdust = double(tdust)
 
 ; generate amps, sigm
 if keyword_set(emissivity) then begin
     if keyword_set(tdust) then begin
-        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity=emissivity, tdust=tdust) else amps = amps_multi(1, freqs, bbody=bbody, emissivity=emissivity, tdust=tdust) ; whatever we get out of the estimator is just multiplied by amps for return
+        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity, tdust) else amps = amps_multi(1, freqs, emissivity, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
     endif else begin
-        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity=emissivity) else amps = amps_multi(1, freqs, bbody=bbody, emissivity=emissivity) ; whatever we get out of the estimator is just multiplied by amps for return
+        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity) else amps = amps_multi(1, freqs, emissivity, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
     endelse
 endif else begin
     if keyword_set(tdust) then begin
-        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, tdust=tdust) else amps = amps_multi(1, freqs, bbody=bbody, tdust=tdust) ; whatever we get out of the estimator is just multiplied by amps for return
+        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, tdust) else amps = amps_multi(1, freqs, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
     endif else begin
         if ~ keyword_set(bbody) then amps = amps_multi(1, freqs) else amps = amps_multi(1, freqs, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
     endelse
