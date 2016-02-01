@@ -20,7 +20,7 @@ amps = dblarr(num_bands)
 
 if keyword_set(bbody) then begin
     ; black body
-    amps = (freqs / freqs[0])^(3.0 + emissivity) / (exp(0.04799 * freqs / tdust) - 1) ; 4.799e-11 is h/k_B, but freqs are in GHz
+    amps = (freqs / 1500)^(3.0 + emissivity) / (exp(0.04799 * freqs / tdust) - 1) ; 4.799e-11 is h/k_B, but freqs are in GHz
     amps *= in_a / amps[0] ; normalize to first peak
 endif else begin
     ; f^2

@@ -6,7 +6,6 @@ compile_opt idl2, HIDDEN
 ;   functargs = {sig:sig, specdens:specdens, sigm:sigm, binwidth:binwidth}
 ;   /bbody = keyword_set(bbody) means we are doing double fit for tdust, emissivity
 
-print, p
 if keyword_set(bbody) then begin
     if keyword_set(real_x) then begin
         if keyword_set(real_y) then begin
