@@ -32,15 +32,15 @@ if size_amps[0] eq 0 then begin ; if just single beam
     ; generate amps, sigms
     if keyword_set(emissivity) then begin
         if keyword_set(tdust) then begin
-            if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity, tdust) else amps = amps_multi(1, freqs, emissivity, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+            if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, emissivity, tdust) else amps = amps_multi(in_a, freqs, emissivity, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
         endif else begin
-            if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity) else amps = amps_multi(1, freqs, emissivity, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+            if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, emissivity) else amps = amps_multi(in_a, freqs, emissivity, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
         endelse
     endif else begin
         if keyword_set(tdust) then begin
-            if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, tdust) else amps = amps_multi(1, freqs, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+            if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, tdust) else amps = amps_multi(in_a, freqs, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
         endif else begin
-            if ~ keyword_set(bbody) then amps = amps_multi(1, freqs) else amps = amps_multi(1, freqs, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+            if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs) else amps = amps_multi(in_a, freqs, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
         endelse
     endelse
     ; sigms
@@ -56,15 +56,15 @@ endif else begin ; loop over input parameters
         ; generate amps, sigms
         if keyword_set(emissivity) then begin
             if keyword_set(tdust) then begin
-                if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity, tdust) else amps = amps_multi(1, freqs, emissivity, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+                if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, emissivity, tdust) else amps = amps_multi(in_a, freqs, emissivity, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
             endif else begin
-                if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity) else amps = amps_multi(1, freqs, emissivity, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+                if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, emissivity) else amps = amps_multi(in_a, freqs, emissivity, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
             endelse
         endif else begin
             if keyword_set(tdust) then begin
-                if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, tdust) else amps = amps_multi(1, freqs, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+                if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, tdust) else amps = amps_multi(in_a, freqs, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
             endif else begin
-                if ~ keyword_set(bbody) then amps = amps_multi(1, freqs) else amps = amps_multi(1, freqs, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+                if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs) else amps = amps_multi(in_a, freqs, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
             endelse
         endelse
         ; sigms

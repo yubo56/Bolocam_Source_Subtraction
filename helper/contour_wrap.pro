@@ -1,4 +1,4 @@
-function contour_wrap, data, ps_file=ps_file, x_bin=x, y_bin=y, title=title, xtitle=xtitle, ytitle=ytitle, xstep=xstep, ystep=ystep, gauss=gauss, quad=quad, levels=levels
+function contour_wrap, data, ps_file=ps_file, x_bin=x, y_bin=y, title=title, xtitle=xtitle, ytitle=ytitle, xstep=xstep, ystep=ystep, gauss=gauss, quad=quad, levels=levels, c_annotation=c_annotation
 ; wrapper around contour to write to filename
 ;   data: data to plot
 ;   ps_file: filename to write to
@@ -14,6 +14,7 @@ function contour_wrap, data, ps_file=ps_file, x_bin=x, y_bin=y, title=title, xti
 ;   /gauss: Assume contour is of gaussian, choose levels at 0-5 sigma
 ;       NOTE: overrides /quad
 ;   /quad: Assume contour is quadratic, choose levels [1.5, 2, 2.5...]^2
+;   c_annotation: annotations of contour levels, just passed on to contour procedure
 
 size_dat = size(data)
 if size_dat[0] ne 2 then begin
@@ -58,9 +59,9 @@ if keyword_set(ps_file) then begin
     !P.MULTI = [0, 1, 1] ; grids window into top, bottom [win_number, cols, rows]
     ; if levels is set, lpot
     if levels eq !NULL then begin
-        contour, data, x, y, charsize=2.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4
+        contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4
     endif else begin
-        contour, data, x, y, charsize=2.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, levels=levels
+        contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, levels=levels
     endelse
 
     ; close file
@@ -70,9 +71,17 @@ if keyword_set(ps_file) then begin
     set_plot, 'X'
 endif else begin
     if levels eq !NULL then begin
-        contour, data, x, y, charsize=2.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4
+        if ~keyword_set(c_annocation) then begin
+            contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4
+        endif else begin
+            contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, c_annotation=c_annotation
+        endelse
     endif else begin
-        contour, data, x, y, charsize=2.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, levels=levels
+        if ~keyword_set(c_annocation) then begin
+            contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, levels=levels
+        endif else begin
+            contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, levels=levels, c_annotation=c_annotation
+        endelse
     endelse
 endelse
 

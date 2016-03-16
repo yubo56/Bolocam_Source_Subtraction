@@ -90,7 +90,7 @@ endif else begin ; if not given position then compute it
     miny = max([ymax - fitRange, 0])
     maxy = min([ymax + fitRange, range - 1])
     submap = convSig[minx:maxx, miny:maxy, max_freq]
-    submap[where(submap le 0, /null)] = 0.001 ; sets minimum to be 0.01, since we only use this for position determination anyways
+    submap[where(submap le 0, /null)] = 1e-8 ; sets minimum to be 1e-8, since we only use this for position determination anyways
     params = fitquad(alog(submap))
 
     ; extract centers; backwards from expected because IDL x,y axis are flipped
@@ -134,6 +134,11 @@ endif else begin ; if not given position then compute it
     if keyword_set(real_y) then yparam=real_y
 endelse
 
+
+; mask out DC bin
+mask = make_array(range, range, value=1D)
+mask[(range - 1) / 2, (range - 1) / 2] = 0 ; mask out DC bin
+
 ; compute uncertainties and amplitude estimator
 Aesttop = 0
 Aestbottom = 0
@@ -150,16 +155,16 @@ for i=0, num_bands - 1 do begin
     kSignal = fft_shift(fft(signal[*,*,i]))
 
     ; compute top, bottom of aest
-    Aesttop += real_part(TOTAL(conj(kFilter) * kSignal / specDens[*,*,i]))
-    Aestbottom += real_part(TOTAL(conj(kFilter) * kFilter / specDens[*,*,i]))
+    Aesttop += real_part(TOTAL(conj(kFilter) * kSignal / specDens[*,*,i] * mask))
+    Aestbottom += real_part(TOTAL(conj(kFilter) * kFilter / specDens[*,*,i] * mask))
 
     ; sigm_a
-    inv_sigm_a += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i]))
+    inv_sigm_a += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i] * mask))
     kfilters = [[[kfilters]], [[kfilter]]]
 
     ; compute uncertaintes for both black body and power law case
-    inv_sigm_beta += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i])) * alog(freqs[i] / freqs[0])^2
-    inv_covar += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i])) * alog(freqs[i] / freqs[0])
+    inv_sigm_beta += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500)^2
+    inv_covar += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500)
 ENDFOR
 
 ; if amplitude estimator is set, use it, else use computed one
@@ -173,42 +178,42 @@ endelse
 ; residual/chi2/derivative dbeta
 dbeta = 0 ; derivative dbeta
 dt_dust = 0 ; derivative dt_dust
-chi2 = 0
 inv_sigm_T = 0
+inv_covarbt = 0
 for i=0, num_bands - 1 do begin
     ; compute residual
-    signal[*,*,i] = signal[*,*,i] - addgauss(amps[i] * aest, sigms[i], xparam, yparam, dblarr(range, range))
-
-    ; mask out DC bin
-    mask = make_array(range, range, value=1D)
-    mask[(range - 1) / 2, (range - 1) / 2] = 0 ; mask out DC bin
-    chi2 += (range )^2 * TOTAL(abs(fft_shift(fft(signal[*,*,i])))^2 / (specdens[*,*,i]) * mask)
-
     ; compute derivatives for both black body and power law case
     ; note that signal contains residual now
     if keyword_set(bbody) then begin
         ; recall 0.04799 is h/k_B
-        dt_dust += (range )^2 * TOTAL((-conj(fft_shift(fft(signal[*,*,i]))) * kfilters[*,*,i]* 0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1))) / specdens[*,*,i] * mask)
+        dt_dust += (range )^2 * TOTAL((conj(fft_shift(fft(signal[*,*,i]))) * kfilters[*,*,i] * $
+            0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)^2)) / specdens[*,*,i] * mask)
         inv_sigm_T += (range )^2 * TOTAL(abs(kfilters[*,*,i])^2 * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))^2 / specdens[*,*,i] * mask)
-
+        inv_covarbt += REAL_PART( (range)^2 * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))
     endif
-    dbeta += (range )^2 * TOTAL((-conj(fft_shift(fft(signal[*,*,i]))) * aest * kfilters[*,*,i]) / specdens[*,*,i] * mask) * 2 * alog(freqs[i] / freqs[0])
+    dbeta += (range )^2 * TOTAL((-conj(fft_shift(fft(signal[*,*,i]))) * aest * kfilters[*,*,i]) / specdens[*,*,i] * mask) * 2 * alog(freqs[i] / 1500)
 endfor
 
 ; to actually get covariances, must invert non-diagonal subspace of covariance matrix
 covar = [[ inv_sigm_a, aest * inv_covar], [aest * inv_covar, aest^2 * inv_sigm_beta]]
 covar = invert(covar)
+covar_bt = [[ inv_sigm_beta, inv_covarbt], [inv_covarbt, inv_sigm_T]]
+covar_bt = invert(covar_bt)
+
+if ~keyword_set(bbody) then retknown = subtractknown_multi(sig, specDens, sigm, binwidth, emissivity, real_pos=[xparam, yparam], real_amp=Aest)$
+    else retknown = subtractknown_multi(sig, specDens, sigm, binwidth, emissivity, tdust, real_pos=[xparam, yparam], real_amp=Aest, /bbody)
 
 return, {xparam:xparam,$
     yparam:yparam,$
     Aest: Aest,$
-    sig: {signal:signal, freqs:freqs},$
+    sig:retknown.sig,$
     sigm_x0:sqrt(1/TOTAL(weights)) / (aest * binwidth),$
     sigm_a: sqrt(covar[0,0]),$
-    chi2:chi2,$
+    chi2:retknown.chi2,$
     sigm_beta:sqrt(covar[1,1]),$
-    sigm_tdust:sqrt(1/inv_sigm_T) / aest,$
+    sigm_tdust:sqrt(1/covar_bt[1,1]) / aest,$
     covar_betaamp:mean([covar[0,1], covar[1,0]]),$
+    covar_bt:covar_bt[0,1] / aest,$
     emissivity:emissivity,$
     tdust:tdust,$
     dbeta:real_part(dbeta),$
