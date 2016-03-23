@@ -13,13 +13,14 @@ ngrid = 9
 chi2s = findgen(ngrid)
 
 fromindex = 0
+tmin = tinit
+bmin = binit
 for s=0, n_elements(steps) - 1 do begin
-    print, steps[s] * [bstep, tstep]
     while fromindex ne 4 do begin ; while 4 isn't the minimum
         ; iterate over parameter grid
         for i=0, ngrid - 1 do begin
-            emis = binit + bstep * grid[0, i] * steps[s]
-            tdust = tinit + tstep * grid[1, i] * steps[s]
+            emis = bmin + bstep * grid[0, i] * steps[s]
+            tdust = tmin + tstep * grid[1, i] * steps[s]
 
             ; subtract, get chi2s, populate grid, make step
             ret = subtractmax_multi(sig, specdens, sigm, binwidth, emis, tdust, /bbody)
@@ -27,12 +28,11 @@ for s=0, n_elements(steps) - 1 do begin
         endfor
         min_chi2 = min(chi2s, fromindex)
         print, min_chi2, format='(d20.8)'
-        print, binit, tinit
+        print, bmin, tmin
         if min_chi2 eq chi2s[4] then break
-        binit += bstep * grid[0, fromindex] * steps[s]
-        tinit = tinit + tstep * grid[1, fromindex] * steps[s]
+        bmin += bstep * grid[0, fromindex] * steps[s]
+        tmin = tmin + tstep * grid[1, fromindex] * steps[s]
     endwhile
-    print, ''
 endfor
-return, {emis:binit, tdust:tinit}
+return, {emis:bmin, tdust:tmin}
 end
