@@ -6,8 +6,8 @@ compile_opt idl2, HIDDEN
 if emissivity eq !NULL then emissivity = 1.5D else emissivity = double(emissivity) ; init values for tnmin search
 if tdust eq !NULL then tdust = 15 else tdust = double(tdust)
 if ~keyword_set(autoder) then autoder=0
-limits_em = [0,3] ; limits on emissivity; 1.5 +- 1.5
-limits_tdust = [5, 100 ] ; limits on tdust
+limits_em = [0,4] ; limits on emissivity
+limits_tdust = [3, 100 ] ; limits on tdust
 
 ; hackish... for passing to tnmin
 if ~keyword_set(real_x) then real_x=0

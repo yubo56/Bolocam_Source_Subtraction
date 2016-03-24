@@ -1,4 +1,4 @@
-function getSEDpts, sig, specdens, sigm, binwidth, real_pos
+function getsedpts, sig, specdens, sigm, binwidth, real_pos
 ; gets the estimates of the fluxes in each frequency band and their uncertainties
 ; inputs:
 ;   sig, specdens, sigm, binwidth - the usual multi-band

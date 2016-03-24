@@ -13,15 +13,15 @@ compile_opt idl2, HIDDEN
 ; given leading amplitude and frequencies, return full set of ones
 
 if emissivity eq !NULL then emissivity = 1.5 ; default emissivity
-if tdust eq !NULL then tdust = 40 ; default tdust
+if tdust eq !NULL then tdust = 15 ; default tdust
 freqs = double(in_freqs)
 num_bands = n_elements(freqs)
 amps = dblarr(num_bands)
 
 if keyword_set(bbody) then begin
     ; black body
-    amps = (freqs / 1500)^(3.0 + emissivity) / (exp(0.04799 * freqs / tdust) - 1) ; 4.799e-11 is h/k_B, but freqs are in GHz
-    amps *= in_a / amps[0] ; normalize to first peak
+    amps = (freqs / freqs[0])^(3.0 + emissivity) / (exp(0.04799 * freqs / tdust) - 1) ; 4.799e-11 is h/k_B, but freqs are in GHz
+    amps *= in_a ; normalize to first peak
 endif else begin
     ; f^2
     amps = (freqs / freqs[0])^(2.0 + emissivity) * in_a ; power law means 2 + epsilon b/c 1/(exp - 1) cancels with one power of nu
