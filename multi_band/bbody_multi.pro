@@ -7,7 +7,7 @@ if emissivity eq !NULL then emissivity = 1.5D else emissivity = double(emissivit
 if tdust eq !NULL then tdust = 15 else tdust = double(tdust)
 if ~keyword_set(autoder) then autoder=0
 limits_em = [0,4] ; limits on emissivity
-limits_tdust = [3, 100 ] ; limits on tdust
+limits_tdust = [3, 150 ] ; limits on tdust
 
 ; hackish... for passing to tnmin
 if ~keyword_set(real_x) then real_x=0

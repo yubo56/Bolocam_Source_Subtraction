@@ -1,4 +1,4 @@
-function subtractmax_multi, sig, specDens, sigm, binwidth, emissivity, tdust, bbody=bbody, eq_sigm=eq_sigm, real_x=real_x, real_y=real_y, real_amp=real_amp
+function subtractmax_multi, sig, specDens, sigm, binwidth, emissivity, tdust, normband=normband, bbody=bbody, eq_sigm=eq_sigm, real_x=real_x, real_y=real_y, real_amp=real_amp
 compile_opt idl2, HIDDEN
     ; Input
     ;   sig         - struct containing
@@ -26,6 +26,7 @@ compile_opt idl2, HIDDEN
 freqs = sig.freqs
 signal = sig.signal
 temp = max(freqs, max_freq); get max frequency
+if ~keyword_set(normband) then normband = 0 ; normalize to leading band by default
 
 ; parameters
 fitRange = 3        ; fit an area of +- fitRange around max to find peak
@@ -38,15 +39,15 @@ if tdust eq !NULL then tdust = 40D else tdust = double(tdust)
 ; generate amps, sigm
 if keyword_set(emissivity) then begin
     if keyword_set(tdust) then begin
-        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity, tdust) else amps = amps_multi(1, freqs, emissivity, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity, tdust, normband=normband) else amps = amps_multi(1, freqs, emissivity, tdust, bbody=bbody, normband=normband) ; whatever we get out of the estimator is just multiplied by amps for return
     endif else begin
-        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity) else amps = amps_multi(1, freqs, emissivity, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity, normband=normband) else amps = amps_multi(1, freqs, emissivity, bbody=bbody, normband=normband) ; whatever we get out of the estimator is just multiplied by amps for return
     endelse
 endif else begin
     if keyword_set(tdust) then begin
-        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, tdust) else amps = amps_multi(1, freqs, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, tdust, normband=normband) else amps = amps_multi(1, freqs, tdust, bbody=bbody, normband=normband) ; whatever we get out of the estimator is just multiplied by amps for return
     endif else begin
-        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs) else amps = amps_multi(1, freqs, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+        if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, normband=normband) else amps = amps_multi(1, freqs, bbody=bbody, normband=normband) ; whatever we get out of the estimator is just multiplied by amps for return
     endelse
 endelse
 if ~ keyword_set(eq_sigm) then sigms = sigm_multi(sigm, freqs) else sigms = sigm_multi(sigm, freqs, eq_sigm=eq_sigm)
@@ -178,13 +179,14 @@ dbeta = 0 ; derivative dbeta
 dt_dust = 0 ; derivative dt_dust
 inv_sigm_T = 0
 inv_covarbt = 0
+inv_covarat = 0
 inv_sigm_beta = 0
 inv_covar = 0
 for i=0, num_bands - 1 do begin
     ; compute beta derivatives
-    inv_sigm_beta += REAL_PART( (range)^2 * aest^2 * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / freqs[0])^2
-    inv_covar += REAL_PART( (range)^2 * aest * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / freqs[0])
-    dbeta += REAL_PART((range )^2 * TOTAL((-conj(fft_shift(fft(signal[*,*,i]))) * aest * kfilters[*,*,i]) / specdens[*,*,i] * mask) * 2 * alog(freqs[i] / freqs[0]))
+    inv_sigm_beta += REAL_PART( (range)^2 * aest^2 * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500)^2
+    inv_covar += REAL_PART( (range)^2 * aest * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500)
+    dbeta += REAL_PART((range )^2 * TOTAL((-conj(fft_shift(fft(signal[*,*,i]))) * aest * kfilters[*,*,i]) / specdens[*,*,i] * mask) * 2 * alog(freqs[i] / 1500))
 
     ; compute tdust derivatives
     if keyword_set(bbody) then begin
@@ -192,30 +194,32 @@ for i=0, num_bands - 1 do begin
         dt_dust += 2 * (range )^2 * TOTAL(- (conj(fft_shift(fft(signal[*,*,i]))) * aest * kfilters[*,*,i]) /$
             specdens[*,*,i] * mask) * 0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1))
         inv_sigm_T += (range )^2 * aest^2 * TOTAL(abs(kfilters[*,*,i])^2 / specdens[*,*,i] * mask) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))^2
-        inv_covarbt += REAL_PART( (range)^2 * aest^2 * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / freqs[0]) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))
+        inv_covarbt += REAL_PART( (range)^2 * aest^2 * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))
+        inv_covarat += REAL_PART( (range)^2 * aest * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))
     endif
 endfor
 
-; to actually get covariances, must invert non-diagonal subspace of covariance matrix
-covar = [[ inv_sigm_a, inv_covar], [inv_covar, inv_sigm_beta]]
-covar = invert(covar)
-covar_bt = [[ inv_sigm_beta, inv_covarbt], [inv_covarbt, inv_sigm_T]]
-covar_bt = invert(covar_bt)
+; to actually get covariances, must invert Hessian
+Hess = [[ inv_sigm_a, inv_covar, inv_covarat], [inv_covar, inv_sigm_beta, inv_covarbt], [inv_covarat, inv_covarbt, inv_sigm_T]]
+; Hess = [[inv_sigm_beta, inv_covarbt], [inv_covarbt, inv_sigm_T]]
+covar = invert(Hess)
 
 return, {xparam:xparam,$
     yparam:yparam,$
     Aest: Aest,$
     sig:retknown.sig,$
+    chi2:retknown.chi2,$
     sigm_x0:sqrt(1/TOTAL(weights)) / (aest * binwidth),$
     sigm_a: sqrt(covar[0,0]),$
-    chi2:retknown.chi2,$
     sigm_beta:sqrt(covar[1,1]),$
-    sigm_tdust:sqrt(covar_bt[1,1]),$
-    covar_betaamp:covar[0,1],$
-    covar_bt:covar_bt[0,1],$
+    sigm_tdust:sqrt(covar[2,2]),$
+    covar_betaamp:0,$
+    covar_bt:covar[0,1],$
+    covar_at:covar[0,2],$
     emissivity:emissivity,$
     tdust:tdust,$
     dbeta:dbeta,$
-    dt_dust:real_part(dt_dust)}
+    dt_dust:real_part(dt_dust)$
+    }
     ; uncertainty in pixels, not arcmins
 end

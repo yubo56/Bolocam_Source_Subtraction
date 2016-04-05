@@ -1,4 +1,4 @@
-function addgauss_multi, in_a, in_sigm, x0, y0, in_sig, emissivity, tdust, bbody=bbody, EQ_SIGM = eq_sigm
+function addgauss_multi, in_a, in_sigm, x0, y0, in_sig, emissivity, tdust, normband=normband, bbody=bbody, EQ_SIGM = eq_sigm
 compile_opt idl2, HIDDEN
 ; Inputs
 ;   in_a - amplitude of source in first-frequency band (first in the in_signal order)
@@ -32,13 +32,13 @@ if size_amps[0] eq 0 then begin ; if just single beam
     ; generate amps, sigms
     if keyword_set(emissivity) then begin
         if keyword_set(tdust) then begin
-            if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, emissivity, tdust) else amps = amps_multi(in_a, freqs, emissivity, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+            if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, emissivity, tdust, normband=normband) else amps = amps_multi(in_a, freqs, emissivity, tdust, bbody=bbody, normband=normband) ; whatever we get out of the estimator is just multiplied by amps for return
         endif else begin
-            if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, emissivity) else amps = amps_multi(in_a, freqs, emissivity, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+            if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, emissivity, normband=normband) else amps = amps_multi(in_a, freqs, emissivity, bbody=bbody, normband=normband) ; whatever we get out of the estimator is just multiplied by amps for return
         endelse
     endif else begin
         if keyword_set(tdust) then begin
-            if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, tdust) else amps = amps_multi(in_a, freqs, tdust, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+            if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs, tdust, normband=normband) else amps = amps_multi(in_a, freqs, tdust, bbody=bbody, normband=normband) ; whatever we get out of the estimator is just multiplied by amps for return
         endif else begin
             if ~ keyword_set(bbody) then amps = amps_multi(in_a, freqs) else amps = amps_multi(in_a, freqs, bbody=bbody) ; whatever we get out of the estimator is just multiplied by amps for return
         endelse
