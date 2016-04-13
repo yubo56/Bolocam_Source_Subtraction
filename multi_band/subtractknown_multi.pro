@@ -1,4 +1,4 @@
-function subtractknown_multi, sig, specDens, sigm, binwidth, emissivity, tdust, bbody=bbody, eq_sigm=eq_sigm, real_pos=real_pos, real_amp=real_amp
+function subtractknown_multi, sig, specDens, sigm, binwidth, emissivity, tdust, bbody=bbody, eq_sigm=eq_sigm, real_pos=real_pos, real_amp=real_amp, normband=normband
 compile_opt idl2, HIDDEN
     ; Input
     ;   sig         - struct containing
@@ -26,6 +26,7 @@ compile_opt idl2, HIDDEN
 freqs = sig.freqs
 signal = sig.signal
 temp = max(freqs, max_freq); get max frequency
+if ~keyword_set(normband) then normband = 0 ; normalize to leading band by default
 
 ; parameters
 range = double(sqrt(n_elements(signal[*,*,0])))
@@ -35,7 +36,7 @@ if emissivity eq !NULL then emissivity = 1.5D else emissivity = double(emissivit
 if tdust eq !NULL then tdust = 40D else tdust = double(tdust)
 
 ; generate amps, sigm
-if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity) else amps = amps_multi(1, freqs, emissivity, tdust, /bbody) ; whatever we get out of the estimator is just multiplied by amps for return
+if ~ keyword_set(bbody) then amps = amps_multi(1, freqs, emissivity, normband=normband) else amps = amps_multi(1, freqs, emissivity, tdust, /bbody, normband=normband) ; whatever we get out of the estimator is just multiplied by amps for return
 
 if ~ keyword_set(eq_sigm) then sigms = sigm_multi(sigm, freqs) else sigms = sigm_multi(sigm, freqs, eq_sigm=eq_sigm)
 

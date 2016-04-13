@@ -108,7 +108,7 @@ endif else begin ; if not given position then compute it
         if i eq max_freq then begin; if it is the max_map, we already have its poesition estimate
             xparams[i] = xcent
             yparams[i] = ycent
-        endif else begin
+        endif else if xcent eq xcent and ycent eq ycent then begin ; x ne x if x = NaN
             ; fit peak on convolved map
             minx = max([xcent - fitRange, 0]) ; bounds checking
             maxx = min([xcent + fitRange, range - 1])
@@ -123,7 +123,7 @@ endif else begin ; if not given position then compute it
                 ; last term compensates for non-centered kernel
             ytemp = params[2] / (2 * params[1]) + fix(ycent - fitRange)
             yparams[i] = (ytemp + range) mod range
-        endelse
+        endif
     end
 
     ; make estimates for center
@@ -158,7 +158,7 @@ for i=0, num_bands - 1 do begin
     Aestbottom += real_part(TOTAL(conj(kFilter) * kFilter / specDens[*,*,i] * mask))
 
     ; sigm_a
-    inv_sigm_a += REAL_PART( (range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i] * mask))
+    inv_sigm_a += REAL_PART( (binwidth * range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens[*,*,i] * mask))
     kfilters = [[[kfilters]], [[kfilter]]]
 ENDFOR
 
@@ -170,8 +170,8 @@ endif else begin
     aest = aesttop / aestbottom
 endelse
 
-if ~keyword_set(bbody) then retknown = subtractknown_multi(sig, specDens, sigm, binwidth, emissivity, real_pos=[xparam, yparam], real_amp=Aest)$
-    else retknown = subtractknown_multi(sig, specDens, sigm, binwidth, emissivity, tdust, real_pos=[xparam, yparam], real_amp=Aest, /bbody)
+if ~keyword_set(bbody) then retknown = subtractknown_multi(sig, specDens, sigm, binwidth, emissivity, real_pos=[xparam, yparam], real_amp=Aest, normband=normband)$
+    else retknown = subtractknown_multi(sig, specDens, sigm, binwidth, emissivity, tdust, real_pos=[xparam, yparam], real_amp=Aest, /bbody, normband=normband)
 signal = retknown.sig.signal
 
 ; residual/chi2/derivative dbeta
@@ -184,18 +184,18 @@ inv_sigm_beta = 0
 inv_covar = 0
 for i=0, num_bands - 1 do begin
     ; compute beta derivatives
-    inv_sigm_beta += REAL_PART( (range)^2 * aest^2 * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500)^2
-    inv_covar += REAL_PART( (range)^2 * aest * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500)
-    dbeta += REAL_PART((range )^2 * TOTAL((-conj(fft_shift(fft(signal[*,*,i]))) * aest * kfilters[*,*,i]) / specdens[*,*,i] * mask) * 2 * alog(freqs[i] / 1500))
+    inv_sigm_beta += REAL_PART( (binwidth * range)^2 * aest^2 * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500)^2
+    inv_covar += REAL_PART( (binwidth * range)^2 * aest * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500)
+    dbeta += REAL_PART((binwidth * range )^2 * TOTAL((-conj(fft_shift(fft(signal[*,*,i]))) * aest * kfilters[*,*,i]) / specdens[*,*,i] * mask) * 2 * alog(freqs[i] / 1500))
 
     ; compute tdust derivatives
     if keyword_set(bbody) then begin
         ; recall 0.04799 is h/k_B
-        dt_dust += 2 * (range )^2 * TOTAL(- (conj(fft_shift(fft(signal[*,*,i]))) * aest * kfilters[*,*,i]) /$
+        dt_dust += 2 * (binwidth * range )^2 * TOTAL(- (conj(fft_shift(fft(signal[*,*,i]))) * aest * kfilters[*,*,i]) /$
             specdens[*,*,i] * mask) * 0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1))
-        inv_sigm_T += (range )^2 * aest^2 * TOTAL(abs(kfilters[*,*,i])^2 / specdens[*,*,i] * mask) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))^2
-        inv_covarbt += REAL_PART( (range)^2 * aest^2 * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))
-        inv_covarat += REAL_PART( (range)^2 * aest * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))
+        inv_sigm_T += (binwidth * range )^2 * aest^2 * TOTAL(abs(kfilters[*,*,i])^2 / specdens[*,*,i] * mask) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))^2
+        inv_covarbt += REAL_PART( (binwidth * range)^2 * aest^2 * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * alog(freqs[i] / 1500) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))
+        inv_covarat += REAL_PART( (binwidth * range)^2 * aest * TOTAL(kfilters[*,*,i] * CONJ(kfilters[*,*,i]) / specDens[*,*,i] * mask)) * (0.04799 * exp(0.04799 * freqs[i] / tdust) * freqs[i] / ( tdust^2 * (exp(0.04799 * freqs[i] / tdust) - 1)))
     endif
 endfor
 
@@ -210,7 +210,8 @@ return, {xparam:xparam,$
     sig:retknown.sig,$
     chi2:retknown.chi2,$
     sigm_x0:sqrt(1/TOTAL(weights)) / (aest * binwidth),$
-    sigm_a: sqrt(covar[0,0]),$
+    ; sigm_a: sqrt(covar[0,0]),$
+    sigm_a: sqrt(1 / inv_sigm_a),$
     sigm_beta:sqrt(covar[1,1]),$
     sigm_tdust:sqrt(covar[2,2]),$
     covar_betaamp:0,$
