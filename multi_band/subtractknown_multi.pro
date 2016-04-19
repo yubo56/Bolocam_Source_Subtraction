@@ -52,7 +52,7 @@ for i=0, num_bands - 1 do begin
     ; mask out DC bin
     mask = make_array(range, range, value=1D)
     mask[(range - 1) / 2, (range - 1) / 2] = 0 ; mask out DC bin
-    chi2 += (range )^2 * TOTAL(abs(fft_shift(fft(signal[*,*,i])))^2 / (specdens[*,*,i]) * mask)
+    chi2 += (binwidth * range )^2 * TOTAL(abs(fft_shift(fft(signal[*,*,i])))^2 / (specdens[*,*,i]) * mask)
 
 endfor
 
