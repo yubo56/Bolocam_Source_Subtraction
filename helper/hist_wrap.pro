@@ -15,6 +15,7 @@ pro hist_wrap, data, ps_file=ps_file,  title=title, xtitle=xtitle, ytitle=ytitle
 
 
 ; check data dimensions and fill in un-supplied parameters
+!P.FONT = 1
 data = reform(data) ; so that when receiving 1D slices of multi-D data, automatically reform
 size_dat = size(data)
 if size_dat[0] ne 1 then begin
@@ -47,12 +48,12 @@ if keyword_set(ps_file) then begin
     wdelete
 
     set_plot, 'PS'
-    device, _Extra = pageInfo, /color, filename=ps_file, language=2
+    device, _Extra = pageInfo, /color, filename=ps_file, language=2, SET_FONT='Helvetica Bold', /TT_font
 
     ; plot contour
     !P.MULTI = [0, 1, 1] ; grids window into top, bottom [win_number, cols, rows]
     ; if levels is set, lpot
-    plot, bins, hist, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, psym=10, yrange=[0, max([hist]) * 1.2], xrange=[min(bins), max(bins)]
+    plot, bins, hist, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, psym=10, yrange=[0, max([hist]) * 1.2], xrange=[min(bins), max(bins)], font=1
     if ~keyword_set(nofit) then begin
         oplot, bins, gfit, color=2, thick=6
         plot_xpos = !X.CRANGE[0] + 0.05 * (!X.CRANGE[1] - !X.CRANGE[0]); coordinates for top left corner
@@ -62,7 +63,7 @@ if keyword_set(ps_file) then begin
         if keyword_set(theory) then begin
             str = str + 'theory = ' + string(format = '(E11.4)', theory)
         endif
-        xyouts, /data, plot_xpos, plot_ypos, str, charsize=1.5
+        xyouts, /data, plot_xpos, plot_ypos, str, charsize=2, FONT=1
     endif
 
     ; close file
@@ -71,7 +72,7 @@ if keyword_set(ps_file) then begin
     ; restore plotting method
     set_plot, 'X'
 endif else begin
-    plot, bins, hist, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, psym=10, yrange=[0, max([hist]) * 1.2], xrange=[min(bins), max(bins)]
+    plot, bins, hist, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, psym=10, yrange=[0, max([hist]) * 1.2], xrange=[min(bins), max(bins)], font=1
     if ~keyword_set(nofit) then begin
         oplot, bins, gfit, color=2, thick=6
         plot_xpos = !X.CRANGE[0] + 0.05 * (!X.CRANGE[1] - !X.CRANGE[0]); coordinates for top left corner
@@ -81,7 +82,7 @@ endif else begin
         if keyword_set(theory) then begin
             str = str + 'theory = ' + string(format = '(E11.4)', theory)
         endif
-        xyouts, /data, plot_xpos, plot_ypos, str, charsize=1.5
+        xyouts, /data, plot_xpos, plot_ypos, str, charsize=2, font=1
     endif
 endelse
 

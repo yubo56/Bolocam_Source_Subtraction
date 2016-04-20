@@ -25,7 +25,7 @@ num_bands = n_elements(freqs)
 
 sd = spdensgen_multi(range, $
     [0.181, 0.137, 0.112, 0.0947, 0.049, 0.009] / 2, $
-    replicate(0,num_bands), replicate(8.0/3, num_bands), bw) ; PSD in units of 0.01 mJy^2
+    replicate(0,num_bands), replicate(8.0/3, num_bands), bw) ; PSD in units of mJy^2
 noise = gennoise_multi(sd, bw, freqs)
 s = 15D / (2 * sqrt(2 * alog(2))) ; sigm in arcsec, in terms of FWHM
 s /= bw ; sigm in bins
