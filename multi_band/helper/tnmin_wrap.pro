@@ -12,44 +12,28 @@ if keyword_set(bbody) then begin
         if keyword_set(real_y) then begin
             if keyword_set(real_amp) then begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_x=real_x, real_y=real_y, real_amp=real_amp, normband=normband)
-                dp = [ret.dbeta, ret.dt_dust]
-                return, ret.chi2
             endif else begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_x=real_x, real_y=real_y, normband=normband)
-                dp = [ret.dbeta, ret.dt_dust]
-                return, ret.chi2
             endelse
         endif else begin
             if keyword_set(real_amp) then begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_x=real_x, real_amp=real_amp, normband=normband)
-                dp = [ret.dbeta, ret.dt_dust]
-                return, ret.chi2
             endif else begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_x=real_x, normband=normband)
-                dp = [ret.dbeta, ret.dt_dust]
-                return, ret.chi2
             endelse
         endelse
     endif else begin
         if keyword_set(real_y) then begin
             if keyword_set(real_amp) then begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_amp=real_amp, real_y=real_y, normband=normband)
-                dp = [ret.dbeta, ret.dt_dust]
-                return, ret.chi2
             endif else begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_y=real_y, normband=normband)
-                dp = [ret.dbeta, ret.dt_dust]
-                return, ret.chi2
             endelse
         endif else begin
             if keyword_set(real_amp) then begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, real_amp=real_amp, normband=normband)
-                dp = [ret.dbeta, ret.dt_dust]
-                return, ret.chi2
             endif else begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p[0], p[1], /bbody, normband=normband)
-                dp = [ret.dbeta, ret.dt_dust]
-                return, ret.chi2
             endelse
         endelse
     endelse
@@ -58,46 +42,32 @@ endif else begin
         if keyword_set(real_y) then begin
             if keyword_set(real_amp) then begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_x=real_x, real_y=real_y, real_amp=real_amp, normband=normband)
-                dp = ret.dbeta
-                return, ret.chi2
             endif else begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_x=real_x, real_y=real_y, normband=normband)
-                dp = ret.dbeta
-                return, ret.chi2
             endelse
         endif else begin
             if keyword_set(real_amp) then begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_x=real_x, real_amp=real_amp, normband=normband)
-                dp = ret.dbeta
-                return, ret.chi2
             endif else begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_x=real_x, normband=normband)
-                dp = ret.dbeta
-                return, ret.chi2
             endelse
         endelse
     endif else begin
         if keyword_set(real_y) then begin
             if keyword_set(real_amp) then begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_amp=real_amp, real_y=real_y, normband=normband)
-                dp = ret.dbeta
-                return, ret.chi2
             endif else begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_y=real_y, normband=normband)
-                dp = ret.dbeta
-                return, ret.chi2
             endelse
         endif else begin
             if keyword_set(real_amp) then begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, real_amp=real_amp, normband=normband)
-                dp = ret.dbeta
-                return, ret.chi2
             endif else begin
                 ret = subtractmax_multi(sig, specdens, sigm, binwidth, p, normband=normband)
-                dp = ret.dbeta
-                return, ret.chi2
             endelse
         endelse
     endelse
 endelse
+dp = [ret.dbeta, ret.dt_dust]
+return, ret.chi2
 end

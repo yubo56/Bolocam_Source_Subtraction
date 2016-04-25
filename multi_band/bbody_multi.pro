@@ -1,10 +1,10 @@
-function bbody_multi, sig, specdens0, sigm, binwidth, emissivity, tdust, normband=normband, autoder=autoder, real_x=real_x, real_y=real_y, real_amp=real_amp
+function bbody_multi, sig, specdens0, sigm, binwidth, e_in, t_in, normband=normband, autoder=autoder, real_x=real_x, real_y=real_y, real_amp=real_amp
 compile_opt idl2, HIDDEN
 ; usual inputs
 ; computes emissivity + tdust by calling tnmin
 
-if emissivity eq !NULL then emissivity = 1.5D else emissivity = double(emissivity) ; init values for tnmin search
-if tdust eq !NULL then tdust = 15 else tdust = double(tdust)
+if e_in eq !NULL then emissivity = 1.5D else emissivity = double(emissivity) ; init values for tnmin search
+if t_in eq !NULL then tdust = 15 else tdust = double(tdust)
 if ~keyword_set(autoder) then autoder=0
 limits_em = [0,4] ; limits on emissivity
 limits_tdust = [3, 150 ] ; limits on tdust

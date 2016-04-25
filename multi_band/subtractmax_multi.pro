@@ -108,7 +108,7 @@ endif else begin ; if not given position then compute it
         if i eq max_freq then begin; if it is the max_map, we already have its poesition estimate
             xparams[i] = xcent
             yparams[i] = ycent
-        endif else if xcent eq xcent and ycent eq ycent then begin ; x ne x if x = NaN
+        endif else begin
             ; fit peak on convolved map
             minx = max([xcent - fitRange, 0]) ; bounds checking
             maxx = min([xcent + fitRange, range - 1])
@@ -119,16 +119,21 @@ endif else begin ; if not given position then compute it
 
             ; extract centers; backwards from expected because IDL x,y axis are flipped
             xtemp = params[3] / (2 * params[1]) + fix(xcent - fitRange)
-            xparams[i] = (xtemp + range) mod range
-                ; last term compensates for non-centered kernel
             ytemp = params[2] / (2 * params[1]) + fix(ycent - fitRange)
-            yparams[i] = (ytemp + range) mod range
-        endif
+                ; last term compensates for non-centered kernel
+            if xtemp eq xtemp and ytemp eq ytemp then begin
+                xparams[i] = (xtemp + range) mod range
+                yparams[i] = (ytemp + range) mod range
+            endif else begin
+                xparams[i] = 0
+                yparams[i] = 0
+            endelse
+        endelse
     end
 
-    ; make estimates for center
-    xparam = TOTAL(weights * xparams) / TOTAL(weights)
-    yparam = TOTAL(weights * yparams) / TOTAL(weights)
+    ; make estimates for center, avoiding xparams = 0 weights
+    xparam = TOTAL(weights * xparams) / TOTAL(weights[where(xparams)])
+    yparam = TOTAL(weights * yparams) / TOTAL(weights[where(xparams)])
 
     ; if only one param is set, use it
     if keyword_set(real_x) then xparam=real_x
@@ -220,7 +225,8 @@ return, {xparam:xparam,$
     emissivity:emissivity,$
     tdust:tdust,$
     dbeta:dbeta,$
-    dt_dust:real_part(dt_dust)$
+    dt_dust:real_part(dt_dust),$
+    convSig:convSig $
     }
     ; uncertainty in pixels, not arcmins
 end

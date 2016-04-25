@@ -5,7 +5,6 @@ compile_opt idl2, HIDDEN
 ;   freqs - frequencies of bands
 ;   /EQ_AMP - 0 [default] - f^(2 + epsilon) power law approx to black body
 ;           - 1 - all equal
-;           - 2 - full black body spectrum    [ TODO implement ]
 ; Output
 ;   sigms - computed amplitudes corresponding to the input bands
 ;
