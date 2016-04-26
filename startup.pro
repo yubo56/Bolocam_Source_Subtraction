@@ -26,9 +26,9 @@ num_bands = n_elements(freqs)
 convrms = [0.181, 0.137, 0.112, 0.0947, 0.049, 0.009] / 2
 s = 15D / (2 * sqrt(2 * alog(2))) ; sigm in arcsec, in terms of FWHM
 s /= bw ; sigm in bins
-a = convrms[0] * 5 ; SNR 5
+a = convrms[0] * 5 / sqrt(!PI * s^2); SNR 5
 sd = spdensgen_multi(range, $
-    convrms * sqrt(!PI * s^2), $ ; convert noise/beam -> noise/pixel
+    convrms, $ ; convert noise/beam -> noise/pixel
     replicate(0,num_bands), replicate(8.0/3, num_bands), bw) ; PSD in units of mJy^2
 noise = gennoise_multi(sd, bw, freqs)
 sig = addgauss_multi(a, s, range/2 + 0.5, range/2 + 0.5, noise, emis, td, /bbody, normband=0)

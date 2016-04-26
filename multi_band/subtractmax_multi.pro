@@ -52,6 +52,21 @@ endif else begin
 endelse
 if ~ keyword_set(eq_sigm) then sigms = sigm_multi(sigm, freqs) else sigms = sigm_multi(sigm, freqs, eq_sigm=eq_sigm)
 
+; first, convolve
+convSig = [] ; list of convolutions
+weights = dblarr(num_bands) ; compute the weights for later part in here
+for i=0, num_bands - 1 do begin
+    kSignal = fft_shift(fft(signal[*,*,i]))
+    paddedKernel = addgauss(amps[i], sigms[i], 0, 0, dblarr(range, range))
+    kkernel = fft_shift(fft(paddedKernel))
+
+    ; convolve and figure out position
+    convSig = [[[convSig]], [[real_part(fft(fft_shift(conj(kkernel) * kSignal / specDens[i], /REVERSE), /INVERSE))]]]
+
+    ; weights (1 / sigm^2)
+    weights[i] = REAL_PART(TOTAL( (fft_shift(dist(range, 1)^2) # replicate(1.0 / (binwidth * range)^2, range)) * conj(kkernel) * kkernel / specDens[*,*,i] )) * (2 * !PI *  (binwidth * range))^2
+endfor
+
 ; if both positions given, use
 if keyword_set(real_x) and keyword_set(real_y) then begin
     xparam = real_x
@@ -65,20 +80,6 @@ if keyword_set(real_x) and keyword_set(real_y) then begin
     endfor
 endif else begin ; if not given position then compute it
     ; convolve maps
-    convSig = [] ; list of convolutions
-    weights = dblarr(num_bands) ; compute the weights for later part in here
-    for i=0, num_bands - 1 do begin
-        kSignal = fft_shift(fft(signal[*,*,i]))
-        paddedKernel = addgauss(amps[i], sigms[i], 0, 0, dblarr(range, range))
-        kkernel = fft_shift(fft(paddedKernel))
-
-        ; convolve and figure out position
-        convSig = [[[convSig]], [[real_part(fft(fft_shift(conj(kkernel) * kSignal / specDens[i], /REVERSE), /INVERSE))]]]
-
-        ; weights (1 / sigm^2)
-        weights[i] = REAL_PART(TOTAL( (fft_shift(dist(range, 1)^2) # replicate(1.0 / (binwidth * range)^2, range)) * conj(kkernel) * kkernel / specDens[*,*,i] )) * (2 * !PI *  (binwidth * range))^2
-    endfor
-
     ; fit max-frequency map (brightest source)
     temp = max(convSig[*, *, max_freq], loc)
     loc = to2d(range, loc)
