@@ -12,6 +12,7 @@ pro hist_wrap, data, ps_file=ps_file,  title=title, xtitle=xtitle, ytitle=ytitle
 ;   theory: a theoretical value to display on the graph (passed as double)
 ;   nofit: do not plot/perform fit (just do histogram)
 
+data0 = data ; full dataset rather than truncated
 
 
 ; check data dimensions and fill in un-supplied parameters
@@ -29,7 +30,7 @@ data = data[fix(0.025 * n_elements(data)):fix(0.975 * n_elements(data))]
 
 
 ; get histogram + gaussian fit
-hist = histogram(data, binsize=max([stddev(data)/10, 1e-8]), locations = bins)
+hist = histogram(data0, binsize=max([stddev(data)/10, 1e-8]), locations = bins)
 if n_elements(hist) lt 2 then begin
     print, "Mean: " + string(mean(data)) + " and zero deviation, not plotting..."
     return

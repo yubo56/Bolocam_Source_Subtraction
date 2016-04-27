@@ -23,7 +23,7 @@ td = 13
 freqs = [400, 352.94, 272.73, 230.77, 150, 100] ; frequencies in GHz
 num_bands = n_elements(freqs)
 
-convrms = [0.181, 0.137, 0.112, 0.0947, 0.049, 0.009] / 2
+convrms = [0.181, 0.137, 0.112, 0.0947, 0.049, 0.029] / 2
 s = 15D / (2 * sqrt(2 * alog(2))) ; sigm in arcsec, in terms of FWHM
 s /= bw ; sigm in bins
 a = convrms[0] * 5 / sqrt(!PI * s^2); SNR 5
