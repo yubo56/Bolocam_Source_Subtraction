@@ -11,7 +11,7 @@ compile_opt idl2, HIDDEN
     ;   /EQ_SIGM    - 0 [default] - 1/f dependence
     ;               - 1 - all equal
     ;   /emissivity - emissivity of body (default = 1.5)
-    ;   real_pos    - known positions of beam (debugging purposes mostly
+    ;   real_pos    - known positions of beam (debugging purposes mostly)
 
     ; Output - Struct containing
     ;   xparam      - estimated x-coordinate of peak
@@ -20,6 +20,7 @@ compile_opt idl2, HIDDEN
     ;   map         - signal minus peak
     ;   sigm_x0     - theoretical deviation of xparam
     ;   sigm_a      - theoretical deviation of Aest
+    ;   dropmask    - which bands dropped in calculation
     ;
     ; subtracts maximum peak of width sigm from map signal containing noise specdens
 
@@ -29,12 +30,16 @@ temp = max(freqs, max_freq); get max frequency
 if ~keyword_set(normband) then normband = 0 ; normalize to leading band by default
 
 ; parameters
-fitRange = 3        ; fit an area of +- fitRange around max to find peak
+fitRange = 3        ; fit an area of +- fitRange * sigm around max to find peak
 range = double(sqrt(n_elements(signal[*,*,0])))
 num_bands = n_elements(freqs)
 ; set up default values
 if emissivity eq !NULL then emissivity = 1.5D else emissivity = double(emissivity)
 if tdust eq !NULL then tdust = 40D else tdust = double(tdust)
+
+; mask out DC bin
+mask = make_array(range, range, value=1D)
+mask[(range - 1) / 2, (range - 1) / 2] = 0 ; mask out DC bin
 
 ; generate amps, sigm
 if keyword_set(emissivity) then begin
@@ -53,6 +58,7 @@ endelse
 if ~ keyword_set(eq_sigm) then sigms = sigm_multi(sigm, freqs) else sigms = sigm_multi(sigm, freqs, eq_sigm=eq_sigm)
 
 ; first, convolve
+temp_sigm_a = [] ; sigm_a per band, up to binwidth etc. factors
 convSig = [] ; list of convolutions
 weights = dblarr(num_bands) ; compute the weights for later part in here
 for i=0, num_bands - 1 do begin
@@ -61,7 +67,11 @@ for i=0, num_bands - 1 do begin
     kkernel = fft_shift(fft(paddedKernel))
 
     ; convolve and figure out position
-    convSig = [[[convSig]], [[real_part(fft(fft_shift(conj(kkernel) * kSignal / specDens[i], /REVERSE), /INVERSE))]]]
+    CSTemp = real_part(fft(fft_shift(mask * conj(kkernel) * kSignal / specDens[*,*,i], /REVERSE), /INVERSE))
+    CSNorm = max(real_part(fft(fft_shift(mask * conj(kkernel) * kkernel / specDens[*,*,i], /REVERSE), /INVERSE)))
+    convSig = [[[convSig]], [[CSTemp/CSNorm]]]
+
+    temp_sigm_a = [temp_sigm_a, CSNorm]
 
     ; weights (1 / sigm^2)
     weights[i] = REAL_PART(TOTAL( (fft_shift(dist(range, 1)^2) # replicate(1.0 / (binwidth * range)^2, range)) * conj(kkernel) * kkernel / specDens[*,*,i] )) * (2 * !PI *  (binwidth * range))^2
@@ -79,56 +89,48 @@ if keyword_set(real_x) and keyword_set(real_y) then begin
         weights[i] = REAL_PART(TOTAL( (fft_shift(dist(range, 1)^2) # replicate(1.0 / (binwidth * range)^2, range)) * conj(kkernel) * kkernel / specDens[*,*,i] )) * (2 * !PI *  (binwidth * range))^2
     endfor
 endif else begin ; if not given position then compute it
-    ; convolve maps
-    ; fit max-frequency map (brightest source)
-    temp = max(convSig[*, *, max_freq], loc)
+    ; rough heuristic for A
+    aest_temp = 0
+    for i=0,5 do begin
+        aest_temp += max(convSig[*,*,i]) * temp_sigm_a[i]
+    endfor
+    aest_temp /= total(temp_sigm_a)
+
+    ; fit total convolved map (highest SNR)
+    convSigTot = dblarr(range, range)
+    for i=0,5 do convSigTot += convSig[*,*,i]
+    temp = max(convSigTot, loc)
     loc = to2d(range, loc)
-    xmax = (loc[0] + range) MOD range ; forces positive index
-    ymax = (loc[1] + range) MOD range
-
-    ; fit peak on convolved map
-    minx = max([xmax - fitRange, 0]) ; bounds checking
-    maxx = min([xmax + fitRange, range - 1])
-    miny = max([ymax - fitRange, 0])
-    maxy = min([ymax + fitRange, range - 1])
-    submap = convSig[minx:maxx, miny:maxy, max_freq]
-    submap[where(submap le 0, /null)] = 1e-8 ; sets minimum to be 1e-8, since we only use this for position determination anyways
-    params = fitquad(alog(submap))
-
-    ; extract centers; backwards from expected because IDL x,y axis are flipped
-    xcent = params[3] / (2 * params[1]) + xmax - fitRange
-    xcent = (xcent + range) mod range
-        ; last term compensates for non-centered kernel
-    ycent = params[2] / (2 * params[1]) + ymax - fitRange
-    ycent = (ycent + range) mod range
+    xcent = (loc[0] + range) MOD range ; forces positive index
+    ycent = (loc[1] + range) MOD range
 
     ; compute weighted average/sigm_x0
     xparams = dblarr(num_bands)
     yparams = dblarr(num_bands)
     for i=0, num_bands - 1 do begin
-        if i eq max_freq then begin; if it is the max_map, we already have its poesition estimate
-            xparams[i] = xcent
-            yparams[i] = ycent
-        endif else begin
-            ; fit peak on convolved map
-            minx = max([xcent - fitRange, 0]) ; bounds checking
-            maxx = min([xcent + fitRange, range - 1])
-            miny = max([ycent - fitRange, 0])
-            maxy = min([ycent + fitRange, range - 1])
-            submap = convSig[minx:maxx, miny:maxy, i]
-            params = fitquad(alog(submap))
+        ; fit peak on convolved map
+        ; sigm_fit = FIX(1/(sqrt(weights[i]) * aest_temp * binwidth)) + 1 ; sigm_pixels for this band rounded up, roughly
+        minx = max([xcent - fitRange, 0]) ; bounds checking
+        maxx = min([xcent + fitRange, range - 1])
+        miny = max([ycent - fitRange, 0])
+        maxy = min([ycent + fitRange, range - 1])
+        ; minx = max([xcent - fitRange * sigm_fit, 0]) ; bounds checking
+        ; maxx = min([xcent + fitRange * sigm_fit, range - 1])
+        ; miny = max([ycent - fitRange * sigm_fit, 0])
+        ; maxy = min([ycent + fitRange * sigm_fit, range - 1])
+        submap = convSig[minx:maxx, miny:maxy, i]
+        params = fitquad(alog(submap))
 
-            ; extract centers; backwards from expected because IDL x,y axis are flipped
-            xtemp = params[3] / (2 * params[1]) + fix(xcent - fitRange)
-            ytemp = params[2] / (2 * params[1]) + fix(ycent - fitRange)
-                ; last term compensates for non-centered kernel
-            if xtemp eq xtemp and ytemp eq ytemp then begin
-                xparams[i] = (xtemp + range) mod range
-                yparams[i] = (ytemp + range) mod range
-            endif else begin
-                xparams[i] = 0
-                yparams[i] = 0
-            endelse
+        ; extract centers; backwards from expected because IDL x,y axis are flipped
+        xtemp = params[3] / (2 * params[1]) + fix(xcent - fitRange)
+        ytemp = params[2] / (2 * params[1]) + fix(ycent - fitRange)
+            ; last term compensates for non-centered kernel
+        if xtemp eq xtemp and ytemp eq ytemp then begin
+            xparams[i] = (xtemp + range) mod range
+            yparams[i] = (ytemp + range) mod range
+        endif else begin
+            xparams[i] = 0
+            yparams[i] = 0
         endelse
     end
 
@@ -136,15 +138,29 @@ endif else begin ; if not given position then compute it
     xparam = TOTAL(weights * xparams) / TOTAL(weights[where(xparams)])
     yparam = TOTAL(weights * yparams) / TOTAL(weights[where(xparams)])
 
+    ; 05/16/16 -- Change: re-estimate until deviations from xparam, yparam within 5sigma
+    ; chi^2_10 has 5 sigma at 50 roughly, 12-2 DOF
+    chi2_pos = TOTAL(weights * (xparams - xparam)^2 + weights * (yparams - yparam)^2) * binwidth^2 * aest_temp^2
+    ; print, chi2_pos
+    ; print, xparams-xparam
+    ; print, yparams-yparam
+    ; print, 1/sqrt(weights)/(binwidth * aest_temp)
+    dropMask = make_array(num_bands, value=1)
+    while chi2_pos gt 50 do begin
+        temp = max([[xparams - xparam]^2 * dropMask * weights, [yparams - yparam]^2 * dropMask  * weights], loc)
+        dropMask[loc MOD num_bands] = 0
+        chi2_pos = TOTAL(weights * dropMask * (xparams - xparam)^2 + $
+            weights * dropMask * (yparams - yparam)^2) * $
+            binwidth^2 * aest_temp^2
+    endwhile
+    ; print, chi2_pos
+    ; print, dropMask
+
     ; if only one param is set, use it
     if keyword_set(real_x) then xparam=real_x
     if keyword_set(real_y) then yparam=real_y
 endelse
 
-
-; mask out DC bin
-mask = make_array(range, range, value=1D)
-mask[(range - 1) / 2, (range - 1) / 2] = 0 ; mask out DC bin
 
 ; compute uncertainties and amplitude estimator
 Aesttop = 0
@@ -215,7 +231,7 @@ return, {xparam:xparam,$
     Aest: Aest,$
     sig:retknown.sig,$
     chi2:retknown.chi2,$
-    sigm_x0:sqrt(1/TOTAL(weights)) / (aest * binwidth),$
+    sigm_x0:sqrt(1/TOTAL(weights * dropMask)) / (aest * binwidth),$
     ; sigm_a: sqrt(covar[0,0]),$
     sigm_a: sqrt(1 / inv_sigm_a),$
     sigm_beta:sqrt(covar[1,1]),$
@@ -227,7 +243,8 @@ return, {xparam:xparam,$
     tdust:tdust,$
     dbeta:dbeta,$
     dt_dust:real_part(dt_dust),$
-    convSig:convSig $
+    convSig:convSig,$
+    dropMask:dropMask $
     }
     ; uncertainty in pixels, not arcmins
 end

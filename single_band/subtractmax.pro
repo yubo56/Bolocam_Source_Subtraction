@@ -21,6 +21,10 @@ kSignal = fft_shift(fft(signal))
     ; no need to manually insert units, since taken care of with L^2 correspondence
 range = double(sqrt(n_elements(signal)))
 
+; mask out DC bin
+mask = make_array(range, range, value=1D)
+mask[(range - 1) / 2, (range - 1) / 2] = 0 ; mask out DC bin
+
 if ~keyword_set(real_pos) then begin
     fitRange = 3        ; fit an area of +- fitRange around max
 
@@ -29,7 +33,7 @@ if ~keyword_set(real_pos) then begin
         ; no units
     kkernel = fft_shift(fft(paddedKernel))
     ; convolve and figure out position
-    convSig = fft(fft_shift(conj(kkernel) * kSignal / specDens, /REVERSE), /INVERSE)
+    convSig = fft(fft_shift(mask * conj(kkernel) * kSignal / specDens, /REVERSE), /INVERSE)
          ; optimal filter = kernel/specDens
 
     ; fit map
@@ -62,11 +66,11 @@ end
 filter = addgauss(1, sigm, xparam, yparam, dblarr(range, range)) ; start with gaussian in correct place
 kFilter = fft_shift(fft(filter))
     ; no units to insert; filter is unitless, and /arcmin^-2 comes with L substitution
-Aest = real_part(TOTAL(conj(kFilter) * kSignal / specDens) / TOTAL(conj(kFilter) * kFilter / specDens))
+Aest = real_part(TOTAL(mask * conj(kFilter) * kSignal / specDens) / TOTAL(mask * conj(kFilter) * kFilter / specDens))
 
 ; compute expected sigmas
-sigm_x0 = SQRT( REAL_PART(1 / (TOTAL( (fft_shift(dist(range, 1)^2) # replicate(1.0 / (binwidth * range)^2, range)) * conj(kfilter) * kfilter / specDens )))) / (2 * !PI * Aest * (binwidth * range))
-sigm_y0 = SQRT( REAL_PART(1 / (TOTAL( (replicate(1.0 / (binwidth * range)^2, range) # fft_shift(dist(range, 1)^2)) * conj(kfilter) * kfilter / specDens )))) / (2 * !PI * Aest * (binwidth * range))
+sigm_x0 = SQRT( REAL_PART(1 / (TOTAL( (fft_shift(dist(range, 1)^2) # replicate(1.0 / (binwidth * range)^2, range)) * mask * conj(kfilter) * kfilter / specDens )))) / (2 * !PI * Aest * (binwidth * range))
+sigm_y0 = SQRT( REAL_PART(1 / (TOTAL( (replicate(1.0 / (binwidth * range)^2, range) # fft_shift(dist(range, 1)^2)) * mask * conj(kfilter) * kfilter / specDens )))) / (2 * !PI * Aest * (binwidth * range))
     ; replicate contains a 1/(binwidth * range)^2 b/c nu_x needs units of 1/(binwidth * range), 1/arcmin
 sigm_A = REAL_PART(SQRT(1  / ( (binwidth * range)^2 * TOTAL(kfilter * CONJ(kfilter) / specDens))))
 
