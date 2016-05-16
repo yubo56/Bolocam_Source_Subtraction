@@ -1,6 +1,7 @@
 function plot_bbody_snu, emis, tdust, in_amps, normbands, fn=fn, large=large, title=title, name=name
 ; plots SEDs for list of emis, tdusts
 ; plots data points using parameters from [0]-th entry in arrays
+; 0th is reference
 range = 256D
 binwidth = 480 / range
 freqs = [400, 352.94, 272.73, 230.77, 150, 100] ; frequencies in GHz
@@ -32,13 +33,13 @@ for i=0, n_elements(emis) - 1 do begin
     normbin = normbin[0] ; instead of array of indicies, just want one index
     plotamps = (plotfreqs / 1500)^(3.0 + emis[i]) / (exp(0.04799 * plotfreqs / tdust[i]) - 1)
     plotamps = plotamps / plotamps[normbin]
-    plotamps = plotamps * in_amps[i]
+    plotamps = plotamps * in_amps[i] * sqrt(!PI) * sigm
 
     if i eq 0 then begin
         if ~keyword_set(name) then begin
             p = plot(plotfreqs, plotamps, COLOR=colors[i MOD n_elements(colors)],$
                YTITLE='Flux (mJy)', XTITLE='Frequency (GHz)',TITLE=title,$
-               NAME=strcompress(string([emis[i], tdust[i]])))
+               NAME=strcompress(string([emis[i], tdust[i]])), /ylog, yrange=[min(plotamps),max(plotamps)])
         endif else begin
             p = plot(plotfreqs, plotamps, COLOR=colors[i MOD n_elements(colors)],$
                YTITLE='Flux (mJy)', XTITLE='Frequency (GHz)',TITLE=title,$
@@ -57,10 +58,15 @@ for i=0, n_elements(emis) - 1 do begin
 endfor
 
 ; overplot points in signal
-sig_bbody = addgauss_multi(amp, sigm, range/2 + 0.5, range/2 + 0.5, noise, 1.7, 13, /bbody)
+sig_bbody = addgauss_multi(amp, sigm, range/2 + 0.5, range/2 + 0.5, noise, emis[0], tdust[0], /bbody)
 amps = amps_multi(amp, freqs, emis[0], tdust[0], /bbody)
 ret = getSEDpts(sig_bbody, specdens0, sigm, binwidth, range/2 + 0.5 * [1,1])
-q1 = errorplot(freqs, ret.amps, ret.sigms, SYMBOL='D', name=name[i], /overplot)
+if ~keyword_set(name) then begin
+    q1 = errorplot(freqs, ret.amps * sqrt(!PI) * sigm, ret.sigms * sqrt(!PI) * sigm, SYMBOL='D', /overplot)
+endif else begin
+    q1 = errorplot(freqs, ret.amps * sqrt(!PI) * sigm, ret.sigms * sqrt(!PI) * sigm, SYMBOL='D', name=name[i], /overplot)
+endelse
+stop
 q1.SYM_COLOR = 'black'
 q1.ERRORBAR_COLOR = 'black'
 q1.SYM_FILLED = 1

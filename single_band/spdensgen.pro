@@ -6,7 +6,7 @@ range = long(range) ; just in case, often issues since FIX is freaking tiny
 
 k = fft_shift(dist(range))
 k[(range - 1) / 2, (range - 1) / 2 ] = 1
-specDens = make_array(range, range, VALUE=const^2) + (constPow^2 * const / k ^ power)
+specDens = make_array(range, range, VALUE=const^2) + (constPow^2 * const^2 / k ^ power)
     ; units of Jy^2
 specDens *= (binwidth * range)^2 ; units of Jy^2 / arcmin^-2
 specDens /= range^2 ; missing 1/N^2 division that is never performed since we generate specdens directly rather than from fft

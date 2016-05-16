@@ -16,6 +16,8 @@ function contour_wrap, data, ps_file=ps_file, x_bin=x, y_bin=y, title=title, xti
 ;   /quad: Assume contour is quadratic, choose levels [1.5, 2, 2.5...]^2
 ;   c_annotation: annotations of contour levels, just passed on to contour procedure
 
+!P.FONT = 1
+loadct, 1
 size_dat = size(data)
 if size_dat[0] ne 2 then begin
     print, "Error: Wrong dimensionality of Data; should be 2D"
@@ -47,21 +49,21 @@ if keyword_set(ps_file) then begin
     set_plot, 'X'
     device, decomposed=0
     tek_color
-    window, 0, xsize=800, ysize=800
+    window, 0, xsize=900, ysize=800
     pageInfo = pswindow()
     cleanplot, /silent
     wdelete
 
     set_plot, 'PS'
-    device, _Extra = pageInfo, /color, filename=ps_file, language=2
+    device, _Extra = pageInfo, /color, filename=ps_file, language=2, SET_FONT='Helvetica Bold', /TT_font
 
     ; plot contour
     !P.MULTI = [0, 1, 1] ; grids window into top, bottom [win_number, cols, rows]
     ; if levels is set, lpot
     if levels eq !NULL then begin
-        contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4
+        contour, data, x, y, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, font=1, ythick=4, /fill, c_colors=[230:130:-20]
     endif else begin
-        contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, levels=levels
+        contour, data, x, y, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, font=1, levels=levels, /fill, c_colors=[230:130:-100/(n_elements(levels) - 1)]
     endelse
 
     ; close file
@@ -72,15 +74,15 @@ if keyword_set(ps_file) then begin
 endif else begin
     if levels eq !NULL then begin
         if ~keyword_set(c_annocation) then begin
-            contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4
+            contour, data, x, y, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, font=1, ythick=4, /fill, c_colors=[230:130:-20]
         endif else begin
-            contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, c_annotation=c_annotation
+            contour, data, x, y, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, font=1, c_annotation=c_annotation, /fill, c_colors=[230:130:-20]
         endelse
     endif else begin
         if ~keyword_set(c_annocation) then begin
-            contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, levels=levels
+            contour, data, x, y, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, font=1, levels=levels, /fill, c_colors=[230:130:-100/(n_elements(levels) - 1)]
         endif else begin
-            contour, data, x, y, charsize=1.0, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, levels=levels, c_annotation=c_annotation
+            contour, data, x, y, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, levels=levels, font=1, c_annotation=c_annotation, /fill, c_colors=[230:130:-100/(n_elements(levels) - 1)]
         endelse
     endelse
 endelse

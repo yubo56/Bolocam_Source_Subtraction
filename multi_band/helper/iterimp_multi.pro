@@ -56,7 +56,7 @@ endif else begin
     while 1 do begin
         ; subtract out maximum pulse
         retVal = subtractmax_multi(signal, specdens, sigm_gauss, binwidth)
-        if retVal.aest ge SNR * sqrt(mean(specdens)) / binwidth then begin
+        if retVal.aest ge SNR * retval.sigm_a then begin
             xs = [xs, retVal.xparam]
             ys = [ys, retVal.yparam]
             As = [As, retval.Aest]

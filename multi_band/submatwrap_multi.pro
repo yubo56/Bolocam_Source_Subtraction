@@ -7,7 +7,7 @@ compile_opt idl2, HIDDEN
 if keyword_set(no_opt) then retval = iterimp_multi(in_sig, specdens, sigm_gauss, binwidth, /SIGM, NUM_PULSES=num_pulses, /no_opt) else retval = iterimp_multi(in_sig, specdens, sigm_gauss, binwidth, /SIGM, NUM_PULSES=num_pulses)
 
 ; matrix compute
-if retval.as ne -1 then begin
+if retval.as[0] ne -1 then begin
     retvalmat = subtractmat_multi(in_sig, specdens, retval.xs, retval.ys, sigm_gauss, binwidth)
 
     ; subtract
