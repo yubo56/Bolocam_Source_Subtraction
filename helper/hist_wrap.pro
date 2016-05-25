@@ -1,7 +1,8 @@
-pro hist_wrap, data, ps_file=ps_file,  title=title, xtitle=xtitle, ytitle=ytitle, xstep=xstep, ystep=ystep, theory=theory, nofit=nofit, ylog=ylog, crop=crop
+pro hist_wrap, data, ps_file=ps_file, noplot=noplot, title=title, xtitle=xtitle, ytitle=ytitle, xstep=xstep, ystep=ystep, theory=theory, nofit=nofit, ylog=ylog, crop=crop, params=params
 ; wrapper around histogram to write to filename
 ;   data: data to plot
 ;   ps_file: filename to write to
+;   noplot: don't draw plot
 ;   x_bin: x-axis bins
 ;   y_bin: y-axis bins
 ;   title: title of plot
@@ -13,6 +14,7 @@ pro hist_wrap, data, ps_file=ps_file,  title=title, xtitle=xtitle, ytitle=ytitle
 ;   nofit: do not plot/perform fit (just do histogram)
 ;   ylog: logarithmic y axis
 ;   crop: take middle 95%
+;   params: store mean, stdev in here
 
 
 ; check data dimensions and fill in un-supplied parameters
@@ -40,57 +42,60 @@ endif
 if ~keyword_set(nofit) then gfit = gaussfit(bins, hist, coeff, nterms=3)
 
 ; if plotting to file, then:
-if keyword_set(ps_file) then begin
-    ; get dimensions
-    set_plot, 'X'
-    device, decomposed=0
-    tek_color
-    window, 0, xsize=1300, ysize=800
-    pageInfo = pswindow()
-    cleanplot, /silent
-    wdelete
+if ~keyword_set(noplot) then begin
+    if keyword_set(ps_file) then begin
+        ; get dimensions
+        set_plot, 'X'
+        device, decomposed=0
+        tek_color
+        window, 0, xsize=1300, ysize=800
+        pageInfo = pswindow()
+        cleanplot, /silent
+        wdelete
 
-    set_plot, 'PS'
-    device, _Extra = pageInfo, /color, filename=ps_file, language=2, SET_FONT='Helvetica Bold', /TT_font
+        set_plot, 'PS'
+        device, _Extra = pageInfo, /color, filename=ps_file, language=2, SET_FONT='Helvetica Bold', /TT_font
 
-    ; plot contour
-    !P.MULTI = [0, 1, 1] ; grids window into top, bottom [win_number, cols, rows]
-    ; if levels is set, lpot
-    plot, bins0, hist0, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, psym=10, yrange=[0.1, max([hist0]) * 1.2], xrange=coeff[1] + 5 * coeff[2] * [-1,1], font=1, ylog=ylog
-    if ~keyword_set(nofit) then begin
-        oplot, bins, gfit, color=2, thick=6
-        plot_xpos = !X.CRANGE[0] + 0.05 * (!X.CRANGE[1] - !X.CRANGE[0]); coordinates for top left corner
-        if ~keyword_set(ylog) then plot_ypos = !Y.CRANGE[0] + 0.9 * (!Y.CRANGE[1] - !Y.CRANGE[0]) $
-            else plot_ypos = 10^(!Y.CRANGE[0] + 0.9 * (!Y.CRANGE[1] - !Y.CRANGE[0]))
-        str = 'mean = ' + string(format = '(G8.2,"!C")', coeff[1])
-        str = str + 'rms = ' + string(format = '(E11.4, "!C")', coeff[2])
-        if keyword_set(theory) then begin
-            str = str + 'theory = ' + string(format = '(E11.4)', theory)
+        ; plot contour
+        !P.MULTI = [0, 1, 1] ; grids window into top, bottom [win_number, cols, rows]
+        ; if levels is set, lpot
+        plot, bins0, hist0, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, psym=10, yrange=[0.1, max([hist0]) * 1.2], xrange=coeff[1] + 5 * coeff[2] * [-1,1], font=1, ylog=ylog
+        if ~keyword_set(nofit) then begin
+            oplot, bins, gfit, color=2, thick=6
+            plot_xpos = !X.CRANGE[0] + 0.05 * (!X.CRANGE[1] - !X.CRANGE[0]); coordinates for top left corner
+            if ~keyword_set(ylog) then plot_ypos = !Y.CRANGE[0] + 0.9 * (!Y.CRANGE[1] - !Y.CRANGE[0]) $
+                else plot_ypos = 10^(!Y.CRANGE[0] + 0.9 * (!Y.CRANGE[1] - !Y.CRANGE[0]))
+            str = 'mean = ' + string(format = '(G8.2,"!C")', coeff[1])
+            str = str + 'rms = ' + string(format = '(E11.4, "!C")', coeff[2])
+            if keyword_set(theory) then begin
+                str = str + 'theory = ' + string(format = '(E11.4)', theory)
+            endif
+            xyouts, /data, plot_xpos, plot_ypos, str, charsize=1.5, FONT=1
         endif
-        xyouts, /data, plot_xpos, plot_ypos, str, charsize=1.5, FONT=1
-    endif
 
-    ; close file
-    device, /close_file
+        ; close file
+        device, /close_file
 
-    ; restore plotting method
-    set_plot, 'X'
-endif else begin
-    plot, bins0, hist0, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, psym=10, yrange=[0.1, max([hist0]) * 1.2], xrange=coeff[1] + 5 * coeff[2] * [-1,1], font=1, ylog=ylog
-    if ~keyword_set(nofit) then begin
-        oplot, bins, gfit, color=2, thick=6
-        plot_xpos = !X.CRANGE[0] + 0.05 * (!X.CRANGE[1] - !X.CRANGE[0]); coordinates for top left corner
-        if ~keyword_set(ylog) then plot_ypos = !Y.CRANGE[0] + 0.9 * (!Y.CRANGE[1] - !Y.CRANGE[0]) $
-            else plot_ypos = 10^(!Y.CRANGE[0] + 0.9 * (!Y.CRANGE[1] - !Y.CRANGE[0]))
-        str = 'mean = ' + string(format = '(E11.4,"!C")', coeff[1])
-        str = str + 'rms = ' + string(format = '(E11.4, "!C")', coeff[2])
-        if keyword_set(theory) then begin
-            str = str + 'theory = ' + string(format = '(E11.4)', theory)
+        ; restore plotting method
+        set_plot, 'X'
+    endif else begin
+        plot, bins0, hist0, charsize=1.5, title=title, ytitle=ytitle, xtitle=xtitle, thick=4, xthick=4, ythick=4, psym=10, yrange=[0.1, max([hist0]) * 1.2], xrange=coeff[1] + 5 * coeff[2] * [-1,1], font=1, ylog=ylog
+        if ~keyword_set(nofit) then begin
+            oplot, bins, gfit, color=2, thick=6
+            plot_xpos = !X.CRANGE[0] + 0.05 * (!X.CRANGE[1] - !X.CRANGE[0]); coordinates for top left corner
+            if ~keyword_set(ylog) then plot_ypos = !Y.CRANGE[0] + 0.9 * (!Y.CRANGE[1] - !Y.CRANGE[0]) $
+                else plot_ypos = 10^(!Y.CRANGE[0] + 0.9 * (!Y.CRANGE[1] - !Y.CRANGE[0]))
+            str = 'mean = ' + string(format = '(E11.4,"!C")', coeff[1])
+            str = str + 'rms = ' + string(format = '(E11.4, "!C")', coeff[2])
+            if keyword_set(theory) then begin
+                str = str + 'theory = ' + string(format = '(E11.4)', theory)
+            endif
+            xyouts, /data, plot_xpos, plot_ypos, str, charsize=1.5, font=1
         endif
-        xyouts, /data, plot_xpos, plot_ypos, str, charsize=1.5, font=1
-    endif
-endelse
+    endelse
+endif
 
 if ~keyword_set(nofit) then print, coeff[1], coeff[2]
+params = [coeff[1], coeff[2]]
 
 end
