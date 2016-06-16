@@ -77,6 +77,7 @@ for i=0, num_bands - 1 do begin
     weights[i] = REAL_PART(TOTAL( (fft_shift(dist(range, 1)^2) # replicate(1.0 / (binwidth * range)^2, range)) * conj(kkernel) * kkernel / specDens[*,*,i] )) * (2 * !PI *  (binwidth * range))^2
 endfor
 
+dropMask = make_array(num_bands, value=1)
 ; if both positions given, use
 if keyword_set(real_x) and keyword_set(real_y) then begin
     xparam = real_x
@@ -108,30 +109,33 @@ endif else begin ; if not given position then compute it
     xparams = dblarr(num_bands)
     yparams = dblarr(num_bands)
     for i=0, num_bands - 1 do begin
-        ; fit peak on convolved map
-        ; sigm_fit = FIX(1/(sqrt(weights[i]) * aest_temp * binwidth)) + 1 ; sigm_pixels for this band rounded up, roughly
-        minx = max([xcent - fitRange, 0]) ; bounds checking
-        maxx = min([xcent + fitRange, range - 1])
-        miny = max([ycent - fitRange, 0])
-        maxy = min([ycent + fitRange, range - 1])
-        ; minx = max([xcent - fitRange * sigm_fit, 0]) ; bounds checking
-        ; maxx = min([xcent + fitRange * sigm_fit, range - 1])
-        ; miny = max([ycent - fitRange * sigm_fit, 0])
-        ; maxy = min([ycent + fitRange * sigm_fit, range - 1])
-        submap = convSig[minx:maxx, miny:maxy, i]
-        params = fitquad(alog(submap))
+        ; ; fit peak on convolved map
+        ; ; sigm_fit = FIX(1/(sqrt(weights[i]) * aest_temp * binwidth)) + 1 ; sigm_pixels for this band rounded up, roughly
+        ; minx = max([xcent - fitRange, 0]) ; bounds checking
+        ; maxx = min([xcent + fitRange, range - 1])
+        ; miny = max([ycent - fitRange, 0])
+        ; maxy = min([ycent + fitRange, range - 1])
+        ; ; minx = max([xcent - fitRange * sigm_fit, 0]) ; bounds checking
+        ; ; maxx = min([xcent + fitRange * sigm_fit, range - 1])
+        ; ; miny = max([ycent - fitRange * sigm_fit, 0])
+        ; ; maxy = min([ycent + fitRange * sigm_fit, range - 1])
+        ; submap = convSig[minx:maxx, miny:maxy, i]
+        ; params = fitquad(alog(submap))
 
-        ; extract centers; backwards from expected because IDL x,y axis are flipped
-        xtemp = params[3] / (2 * params[1]) + fix(xcent - fitRange)
-        ytemp = params[2] / (2 * params[1]) + fix(ycent - fitRange)
-            ; last term compensates for non-centered kernel
-        if xtemp eq xtemp and ytemp eq ytemp then begin
-            xparams[i] = (xtemp + range) mod range
-            yparams[i] = (ytemp + range) mod range
-        endif else begin
-            xparams[i] = 0
-            yparams[i] = 0
-        endelse
+        ; ; extract centers; backwards from expected because IDL x,y axis are flipped
+        ; xtemp = params[3] / (2 * params[1]) + fix(xcent - fitRange)
+        ; ytemp = params[2] / (2 * params[1]) + fix(ycent - fitRange)
+        ;     ; last term compensates for non-centered kernel
+        ; if xtemp eq xtemp and ytemp eq ytemp then begin
+        ;     xparams[i] = (xtemp + range) mod range
+        ;     yparams[i] = (ytemp + range) mod range
+        ; endif else begin
+        ;     xparams[i] = 0
+        ;     yparams[i] = 0
+        ; endelse
+        ret = subtractmax(sig.signal[*,*,i], specDens[*,*,i], sigm, binwidth)
+        xparams[i] = ret.xparam
+        yparams[i] = ret.yparam
     end
 
     ; make estimates for center, avoiding xparams = 0 weights
@@ -139,22 +143,15 @@ endif else begin ; if not given position then compute it
     yparam = TOTAL(weights * yparams) / TOTAL(weights[where(xparams)])
 
     ; 05/16/16 -- Change: re-estimate until deviations from xparam, yparam within 5sigma
-    ; chi^2_10 has 5 sigma at 50 roughly, 12-2 DOF
-    chi2_pos = TOTAL(weights * (xparams - xparam)^2 + weights * (yparams - yparam)^2) * binwidth^2 * aest_temp^2
-    ; print, chi2_pos
-    ; print, xparams-xparam
-    ; print, yparams-yparam
-    ; print, 1/sqrt(weights)/(binwidth * aest_temp)
-    dropMask = make_array(num_bands, value=1)
-    while chi2_pos gt 50 do begin
-        temp = max([[xparams - xparam]^2 * dropMask * weights, [yparams - yparam]^2 * dropMask  * weights], loc)
-        dropMask[loc MOD num_bands] = 0
-        chi2_pos = TOTAL(weights * dropMask * (xparams - xparam)^2 + $
-            weights * dropMask * (yparams - yparam)^2) * $
+    chi2_pos = TOTAL(weights * (xparams - xcent)^2 + weights * (yparams - ycent)^2) * binwidth^2 * aest_temp^2
+    stop
+    while chi2_pos gt chisqr_cvf(0.01, 10) do begin
+        temp = max([[xparams - xcent]^2 * dropMask * weights, [yparams - ycent]^2 * dropMask  * weights], loc)
+        dropMask[loc] = 0
+        chi2_pos = TOTAL(weights * dropMask * (xparams - xcent)^2 + $
+            weights * dropMask * (yparams - ycent)^2) * $
             binwidth^2 * aest_temp^2
     endwhile
-    ; print, chi2_pos
-    ; print, dropMask
 
     ; if only one param is set, use it
     if keyword_set(real_x) then xparam=real_x

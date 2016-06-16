@@ -28,7 +28,7 @@ endif
 
 ; take middle 95%
 datafit = data[sort(data)]
-datafit = datafit[fix(0.025 * n_elements(datafit)):fix(0.975 * n_elements(datafit))]
+datafit = datafit[long(0.025 * n_elements(datafit)):long(0.975 * n_elements(datafit))]
 
 
 ; get histogram + gaussian fit

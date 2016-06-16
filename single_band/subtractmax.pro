@@ -1,4 +1,4 @@
-function subtractmax, signal, specDens, sigm, binwidth, real_pos=real_pos
+function subtractmax, signal, specDens, sigm, binwidth, real_pos=real_pos, range=range
 compile_opt idl2, HIDDEN
     ; Input
     ;   signal      - input map from which we subtract tallest peak
@@ -37,7 +37,8 @@ if ~keyword_set(real_pos) then begin
          ; optimal filter = kernel/specDens
 
     ; fit map
-    temp = max(convSig, loc)
+    if ~keyword_set(range) then temp = max(convSig, loc) else$
+        temp = max(convSig[range[0]:range[1], range[2]:range[3]], loc)
     loc = to2d(range, loc)
     xmax = (loc[0] + range) MOD range ; forces positive index
     ymax = (loc[1] + range) MOD range
