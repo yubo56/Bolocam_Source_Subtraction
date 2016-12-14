@@ -6,7 +6,7 @@ compile_opt idl2, HIDDEN
     ;   sigm_gauss - width of Gaussians
     ;   binwidth - width of pixels
     ;
-    ; Output - 
+    ; Output -
     ;   signal, As, xs, ys - residual map; amplitudes, positions of beams
     ;
     ; Wrapper around submatwrap that also goes back to look at estimates to check whether double incidence
@@ -37,7 +37,7 @@ orig = retval.signal
 for i=0, (n_elements(retval.xs) - 1) do begin
     num_pulses = 1
 
-    ; set up 
+    ; set up
     sig = orig[retval.xs[i] - fitwidth:retval.xs[i] + fitwidth, retval.ys[i] - fitwidth:retval.ys[i] + fitwidth]
     xs = [retval.xs[i] - FIX(retval.xs[i] - fitwidth)]
     ys = [retval.ys[i] - FIX(retval.ys[i] - fitwidth)]
@@ -53,7 +53,7 @@ for i=0, (n_elements(retval.xs) - 1) do begin
 
         ; check whether we beat minimum height
         if min(retvaltemp.as) le minheight then break ; break without overwriting As.
-        
+
         ; update values
         sig = retvaltemp.signal
         xs = retvaltemp.xs

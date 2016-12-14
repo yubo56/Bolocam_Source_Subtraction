@@ -26,7 +26,7 @@ function sfit_p, z, degree, KX=kx, IRREGULAR=irreg_p, MAX_DEGREE=max_p
 ; 	column and row subscripts implicitly contain the X and Y
 ; 	location of the point.  The sizes of the dimensions may be unequal.
 ;	If IRREGULAR is set, Data is a [3,n] array containing the X,
-;	Y, and Z location of each point sampled on the surface.  
+;	Y, and Z location of each point sampled on the surface.
 ;
 ;	Degree:	The maximum degree of fit (in one dimension).
 ;
@@ -43,7 +43,7 @@ function sfit_p, z, degree, KX=kx, IRREGULAR=irreg_p, MAX_DEGREE=max_p
 ; 	    If MAX_DEGREE is set, the terms returned will be in a
 ; 	    vector, [K, y, y^2, x, xy, x^2], in which no term has a
 ; 	    power higher than two in X and Y combined, and the powers
-; 	    of Y vary the fastest. 
+; 	    of Y vary the fastest.
 ;
 ;
 ; OUTPUT:
@@ -60,7 +60,7 @@ function sfit_p, z, degree, KX=kx, IRREGULAR=irreg_p, MAX_DEGREE=max_p
 ;		parameter is returned as a (Degree+1) by (Degree+1)
 ;		element array.  If MAX_DEGREE is set, this parameter
 ;		is returned as a (Degree+1) * (Degree+2)/2 element
-;		vector. 
+;		vector.
 ;
 ; PROCEDURE:
 ; 	Fit a 2D array Z as a polynomial function of x and y.
@@ -114,5 +114,5 @@ function sfit_p, z, degree, KX=kx, IRREGULAR=irreg_p, MAX_DEGREE=max_p
    if max_deg eq 0 then kx = reform(kx, degree+1, degree+1)
 
    return, irreg ? reform(reform(kx,n2) # ut, m) : $ ;Return the fit
-     reform(reform(kx,n2) # ut, nx, ny)   
+     reform(reform(kx,n2) # ut, nx, ny)
 end

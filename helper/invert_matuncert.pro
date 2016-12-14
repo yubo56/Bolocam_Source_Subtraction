@@ -1,7 +1,7 @@
 function invert_matuncert, mat, uncerts
 ; performs 2x2 matrix inversion with uncertainties
 ; article is at http://arxiv.org/pdf/hep-ex/9909031v1.pdf
-; 
+;
 ; Specifically, we assume no covariance in matrix elements, and so use
 ; Equation B-7 from the aforementioned article
 

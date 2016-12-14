@@ -22,7 +22,7 @@ range = double(sqrt(n_elements(noise)))
 
 ; set up some stuff to compute Gaussians
 x = RANDOMU(seed) * (range - 2 * edgeRange - 1) + edgeRange
-y = RANDOMU(seed) * (range - 2 * edgeRange - 1) + edgeRange 
+y = RANDOMU(seed) * (range - 2 * edgeRange - 1) + edgeRange
 x0 = [x] ; store generated coords
 y0 = [y]
 signal = addGauss(gaussHeight, sigm, x, y, noise)
@@ -30,7 +30,7 @@ signal = addGauss(gaussHeight, sigm, x, y, noise)
 for i=2, numGaussians do begin
     repeat begin ; generate new coords at least once
         x = RANDOMU(seed) * (range - 2 * edgeRange - 1) + edgeRange
-        y = RANDOMU(seed) * (range - 2 * edgeRange - 1) + edgeRange 
+        y = RANDOMU(seed) * (range - 2 * edgeRange - 1) + edgeRange
     endrep until min((x0 - x)^2 + (y0 - y)^2) gt minDist^2 ; until mindist exceeded
     x0 = [x0,x]
     y0 = [y0,y]

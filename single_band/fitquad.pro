@@ -4,7 +4,7 @@ compile_opt idl2, HIDDEN
 range = SQRT(N_ELEMENTS(signal))
 
 x = DINDGEN(range) ## REPLICATE(1D, range)
-y = REPLICATE(1D, range) ## DINDGEN(range) 
+y = REPLICATE(1D, range) ## DINDGEN(range)
 xy = x^2 + y^2 ; x^2 + y^2 term
 
 ; matrix equation Ax = b

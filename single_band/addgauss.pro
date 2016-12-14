@@ -2,7 +2,7 @@ function addgauss, a, sigm, x0, y0, signal
 compile_opt idl2, HIDDEN
     ; adds a Gaussian height a, sigma sigma at arbitrary offset $x0, y0$ into signal
     ; only process around 3sigma of Gaussian
-    
+
 range = LONG(sqrt(N_ELEMENTS(signal)))
 sizeSig = size(a)
 numSigs = N_ELEMENTS(a) ; assume N_ELEMENTS(A) = N_ELEMENTS(sigm, x0, y0)
